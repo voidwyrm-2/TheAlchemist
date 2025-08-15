@@ -8,13 +8,32 @@ using static Plugin;
 
 public static class PlayerHooks
 {
-    private static int _playerCount;
-    
     internal static void Apply()
     {
         On.Player.ctor += PlayerInit;
         On.Player.CanBeSwallowed += PlayerAllowItemSwallowing;
         On.Player.Update += PlayerUpdate;
+        On.ShelterDoor.Close += SavePlayerData;
+    }
+
+    private static void SavePlayerData(On.ShelterDoor.orig_Close orig, ShelterDoor self)
+    {
+        foreach (var info in InfoMap.Values)
+        {
+            Alchemists.Remove(info.Owner);
+            
+            if (info.Saved || !self.room.game.IsStorySession)
+                continue;
+                
+            Logger.LogInfo($"Saving info for player {info.PlayerNumber}");
+            var save = SlugBase.SaveData.SaveDataExtension.GetSlugBaseData(self.room.game.GetStorySession.saveState.miscWorldSaveData);
+            info.Save(save);
+            Logger.LogInfo($"Saved info for player {info.PlayerNumber}");
+        }
+        
+        InfoMap.Clear();
+
+        orig(self);
     }
 
     private static void PlayerUpdate(On.Player.orig_Update orig, Player self, bool eu)
@@ -25,7 +44,7 @@ public static class PlayerHooks
         {
             var info = self.GetInfo();
 
-            if (self.IsPressed(EatItemInStomachKey) && self.objectInStomach != null)
+            if (self.IsPressed(ConvertToMatterKey) && (self.objectInStomach != null || self.FoodInStomach > 0))
             {
                 info.StomachEatTicker++;
                 
@@ -33,25 +52,36 @@ public static class PlayerHooks
 
                 if (info.StomachEatTicker >= 33)
                 {
-                    self.Blink(2);
+                    self.Blink(4);
+                    
+                    info.StomachEatTicker = 0;
                     
                     var originalMatter = info.Matter;
 
-                    info.StomachEatTicker = 0;
+                    if (self.objectInStomach != null)
+                    {
+                        var obj = self.objectInStomach;
 
-                    var obj = self.objectInStomach;
+                        self.objectInStomach = null;
 
-                    self.objectInStomach = null;
-
-                    info.Matter += obj.GetMatterValueForItem();
+                        info.Matter += Utils.GetMatterValueForItem(obj);
+                        
+                        Logger.LogDebug($"Consumed stomach item (which was a {obj.type}); matter was {originalMatter}, it's now {info.Matter}");
+                    }
+                    else
+                    {
+                        self.SubtractFood(1);
+                        info.Matter += 20;
+                        Logger.LogDebug($"Consumed 1 food pip; matter was {originalMatter}, it's now {info.Matter}");
+                    }
+                    
+                    var color = PlayerGraphics.SlugcatColor((self.State as PlayerState)!.slugcatCharacter);
 
                     var vel = new Vector2(Random.value, Random.value) * 2;
-                    var vel2 = new Vector2(Random.value * 2, Random.value) * 3;
-                    var color = PlayerGraphics.SlugcatColor((self.State as PlayerState)!.slugcatCharacter);
                     self.room.AddObject(new Spark(self.mainBodyChunk.pos, vel, color, null, 30, 50));
+                    
+                    var vel2 = new Vector2(Random.value * 2, Random.value) * 3;
                     self.room.AddObject(new Spark(self.mainBodyChunk.pos, vel2, color, null, 37, 60));
-
-                    Logger.LogDebug($"Stomach item (which was a {obj.type}) consumed, matter was {originalMatter}, it's now {info.Matter}");
                 }
             }
             else
@@ -59,44 +89,60 @@ public static class PlayerHooks
                 info.StomachEatTicker = 0;
             }
             
-            if (self.IsPressed(ConvertFoodToMatterKey) && self.playerState.foodInStomach > 0)
+            if (self.IsPressed(ConvertMatterToFoodKey) && self.FoodInStomach < self.MaxFoodInStomach && info.Matter >= FoodPipMatterCost)
             {
-                info.FoodConvertTicker++;
+                info.MatterToFoodTicker++;
                 
                 self.Blink(2);
 
-                if (info.FoodConvertTicker >= 33)
+                if (info.MatterToFoodTicker >= 33)
                 {
-                    self.Blink(2);
+                    self.Blink(4);
+                    
+                    info.MatterToFoodTicker = 0;
                     
                     var originalMatter = info.Matter;
-
-                    info.FoodConvertTicker = 0;
                     
-                    self.SubtractFood(1);
-                    info.Matter += 20;
+                    info.Matter -= FoodPipMatterCost;
+                    
+                    self.AddFood(1);
+                    
+                    Logger.LogDebug($"Added 1 food pip for {FoodPipMatterCost} matter; matter was {originalMatter}, it's now {info.Matter}");
+                    
+                    var color = PlayerGraphics.SlugcatColor((self.State as PlayerState)!.slugcatCharacter);
 
                     var vel = new Vector2(Random.value, Random.value) * 2;
-                    var vel2 = new Vector2(Random.value * 2, Random.value) * 3;
-                    var color = PlayerGraphics.SlugcatColor((self.State as PlayerState)!.slugcatCharacter);
-                    self.room.AddObject(new Spark(self.mainBodyChunk.pos, vel, color, null, 30, 50));
-                    self.room.AddObject(new Spark(self.mainBodyChunk.pos, vel2, color, null, 37, 60));
-
-                    Logger.LogDebug($"Consumed 1 Slugcat food, matter was {originalMatter}, it's now {info.Matter}");
+                    self.room.AddObject(new Spark(self.mainBodyChunk.pos, vel, color, null, 40, 70));
+                    
+                    //self.room.AddObject(new Lightning(self.room, 2f + Random.value * 3, false));
+                    self.room.AddObject(new KarmicArmor.EnergyStrand(4 + (int)(Random.value * 10), 0.5f + Random.value * 2)
+                    {
+                        pos = self.mainBodyChunk.pos
+                    });
                 }
             }
             else
             {
-                info.FoodConvertTicker = 0;
+                info.MatterToFoodTicker = 0;
             }
+
+            //if (self.IsPressed(SynthesisKey) && self.objectInStomach == null)
+            //{
+                
+            //}
         }
     }
 
     private static bool PlayerAllowItemSwallowing(On.Player.orig_CanBeSwallowed orig, Player self, PhysicalObject obj)
     {
-        if (self.IsAlchem() && obj is Spear)
-            return true;
-        
+        if (self.IsAlchem() && self.objectInStomach == null)
+        {
+            if (obj is Spear)
+                return true;
+            
+            return self.FoodInStomach == self.MaxFoodInStomach && obj is IPlayerEdible;
+        }
+
         return orig(self, obj);
     }
 
@@ -106,14 +152,25 @@ public static class PlayerHooks
 
         if (self.IsAlchem())
         {
-            Logger.LogInfo($"Alchemist Player found with id {_playerCount}, initializing...");
+            var playerNumber = self.playerState.playerNumber;
+            
+            Logger.LogInfo($"Alchemist Player found with id {playerNumber}, initializing...");
 
-            AlchemistInfo info = new(self);
-            Alchemists.Add(self, info);
-            InfoList.Add(info);
+            if (InfoMap.ContainsKey(playerNumber))
+            {
+                InfoMap.Remove(playerNumber);
+                Logger.LogInfo($"Player {playerNumber} was already initialized, previous info cleared");
+            }
 
-            Logger.LogInfo($"Player {_playerCount} initialized");
-            _playerCount++;
+            var save = SlugBase.SaveData.SaveDataExtension.GetSlugBaseData(self.room.game.GetStorySession.saveState.miscWorldSaveData);
+            var result = AlchemistInfo.LoadFromSave(save, self);
+            Alchemists.Add(self, result.Info);
+            InfoMap.Add(playerNumber, result.Info);
+
+            if (result.Loaded)
+                Logger.LogInfo($"Player {playerNumber} info loaded from save");
+            else
+                Logger.LogInfo($"Player {playerNumber} info initialized");
         }
     }
 }

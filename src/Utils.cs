@@ -15,12 +15,15 @@ public static class Utils
     internal static AlchemistInfo GetInfo(this Player self) =>
         Alchemists.GetValue(self, _ => new AlchemistInfo(self));
     
-    internal static int GetMatterValueForItem(this AbstractPhysicalObject self)
+    internal static int GetMatterValueForItem(AbstractPhysicalObject self)
     {
         var type = self.type;
         
         if (type == AbstractPhysicalObject.AbstractObjectType.Rock)
-            return 5;
+            return 4;
+        
+        if (type == AbstractPhysicalObject.AbstractObjectType.ScavengerBomb)
+            return 30;
 
         if (type == AbstractPhysicalObject.AbstractObjectType.Spear)
         {
@@ -30,19 +33,19 @@ public static class Utils
                 return 50;
 
             if (spear.electric)
-                return 80;
+                return 60;
             
-            return 30;
+            return 20;
         }
                 
         if (type == AbstractPhysicalObject.AbstractObjectType.DataPearl)
-            return 70;
+            return 40;
         
         if (type == AbstractPhysicalObject.AbstractObjectType.VultureMask)
-            return 100;
+            return 80;
         
         if (type == DLCSharedEnums.AbstractObjectType.SingularityBomb)
-            return 800;
+            return 600;
         
         return 0;
     }

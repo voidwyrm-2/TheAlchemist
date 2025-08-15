@@ -1,3 +1,4 @@
+using System;
 using HUD;
 using RWCustom;
 
@@ -5,17 +6,19 @@ namespace TheAlchemist;
 
 public class AlchemistMatterLabels : HudPart
 {
-    private readonly FLabel[] _labels;
+    private readonly HUD.HUD _hud;
+    private FLabel[] _labels;
     
     public AlchemistMatterLabels(HUD.HUD hud, RainWorld rainworld) : base(hud)
     {
-        _labels = new FLabel[Vars.InfoList.Count];
+        _hud = hud;
+        _labels = new FLabel[Vars.InfoMap.Count];
         
         var y = rainworld.screenSize.y - 40;
 
-        for (var i = 0; i < Vars.InfoList.Count; i++)
+        for (var i = 0; i < Vars.InfoMap.Count; i++)
         {
-            var info = Vars.InfoList[i];
+            var info = Vars.InfoMap[i];
             
             FLabel label = new(Custom.GetFont(), $"{info.Matter}")
             {
@@ -25,9 +28,9 @@ public class AlchemistMatterLabels : HudPart
                 y = y
             };
 
-            y -= 20;
+            y -= 30;
             
-            hud.fContainers[1].AddChild(label);
+            _hud.fContainers[1].AddChild(label);
             _labels[i] = label;
         }
     }
@@ -36,8 +39,8 @@ public class AlchemistMatterLabels : HudPart
     {
         base.Update();
 
-        for (var i = 0; i < Vars.InfoList.Count; i++)
-            _labels[i].text = $"{Vars.InfoList[i].Matter}";
+        for (var i = 0; i < Vars.InfoMap.Count; i++)
+            _labels[i].text = $"{Vars.InfoMap[i].Matter}";
     }
 
     public override void ClearSprites()
@@ -46,5 +49,9 @@ public class AlchemistMatterLabels : HudPart
         
         foreach (var label in _labels)
             label.RemoveFromContainer();
+        
+        _labels = Array.Empty<FLabel>();
+        
+        _hud.parts.Remove(this);
     }
 }

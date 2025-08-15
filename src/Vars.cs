@@ -7,11 +7,13 @@ namespace TheAlchemist;
 internal static class Vars
 {
     internal static readonly ConditionalWeakTable<Player, AlchemistInfo> Alchemists = new();
-    internal static readonly List<AlchemistInfo> InfoList = new();
+    internal static readonly Dictionary<int, AlchemistInfo> InfoMap = new();
     
     internal static SlugcatStats.Name Alchem = new("nuclear.Alchemist");
-        
-    internal static PlayerKeybind EatItemInStomachKey;
-    internal static PlayerKeybind ConvertFoodToMatterKey;
     
+    internal const int FoodPipMatterCost = 20;
+        
+    internal static PlayerKeybind ConvertToMatterKey;
+    internal static PlayerKeybind ConvertMatterToFoodKey;
+    internal static PlayerKeybind SynthesisKey;
 }

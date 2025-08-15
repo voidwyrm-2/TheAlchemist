@@ -14,7 +14,7 @@ namespace TheAlchemist
     public class Plugin : BaseUnityPlugin
     {
         public const string MOD_ID = "nuclear.TheAlchemist";
-        public const string MOD_VERSION = "0.3.1";
+        public const string MOD_VERSION = "0.3.11";
         
         internal new static ManualLogSource Logger;
         
@@ -28,10 +28,12 @@ namespace TheAlchemist
             
             try
             {
-                EatItemInStomachKey =
-                    Utils.RegisterKeybind("eatStomachItem", "Convert Stomach Item", KeyCode.V, KeyCode.None);
-                ConvertFoodToMatterKey =
-                    Utils.RegisterKeybind("convertFoodToMateter", "Convert Food", KeyCode.B, KeyCode.None);
+                ConvertToMatterKey =
+                    Utils.RegisterKeybind("convertToMatter", "Convert To Matter", KeyCode.V, KeyCode.None);
+                ConvertMatterToFoodKey =
+                    Utils.RegisterKeybind("convertToFood", "Convert Matter To Food", KeyCode.B, KeyCode.None);
+                SynthesisKey =
+                    Utils.RegisterKeybind("synthesis", "Synthesis Object", KeyCode.N, KeyCode.None);
             }
             catch (Exception e)
             {
@@ -40,9 +42,9 @@ namespace TheAlchemist
             
             Logger.LogInfo("Keybinds registered");
             
-            PlayerHooks.Apply();
-            
             On.HUD.HUD.ctor += HUDInit;
+            
+            PlayerHooks.Apply();
         }
 
         private static void HUDInit(On.HUD.HUD.orig_ctor orig, HUD.HUD self, FContainer[] fcontainers, RainWorld rainworld, IOwnAHUD owner)
