@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="AutoImportSettings">
+    <option name="autoReloadType" value="SELECTIVE" />
+  </component>
+  <component name="ChangeListManager">
+    <list default="true" id="164317c8-1547-4fe0-abfe-dfea55294efe" name="Changes" comment="">
+      <change afterPath="$PROJECT_DIR$/src/AlchemistInfo.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/SlugTemplate.sln" beforeDir="false" afterPath="$PROJECT_DIR$/TheAlchemist.sln" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/mod/illustrations/multiplayerportrait00-prototype.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/mod/illustrations/multiplayerportrait01-prototype.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/mod/illustrations/multiplayerportrait10-prototype.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/mod/illustrations/multiplayerportrait11-prototype.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/mod/illustrations/multiplayerportrait20-prototype.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/mod/illustrations/multiplayerportrait21-prototype.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/mod/illustrations/multiplayerportrait30-prototype.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/mod/illustrations/multiplayerportrait31-prototype.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/mod/modinfo.json" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/mod/scenes/slugcat - prototype/Background.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/mod/scenes/slugcat - prototype/Grass 1.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/mod/scenes/slugcat - prototype/Grass 2.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/mod/scenes/slugcat - prototype/Grass 3.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/mod/scenes/slugcat - prototype/Slugcat.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/mod/slugbase/scenes/ghost_prototype.json" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/mod/slugbase/scenes/slugcat_prototype.json" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/mod/slugbase/the_prototype.json" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/mod/thumbnail.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/Plugin.cs" beforeDir="false" afterPath="$PROJECT_DIR$/src/Plugin.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/SlugTemplate.csproj" beforeDir="false" afterPath="$PROJECT_DIR$/src/TheAlchemist.csproj" afterDir="false" />
+    </list>
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="Git.Settings">
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+  </component>
+  <component name="HighlightingSettingsPerFile">
+    <setting file="file://$PROJECT_DIR$/src/AlchemistInfo.cs" root0="FORCE_HIGHLIGHTING" />
+    <setting file="file://$PROJECT_DIR$/src/Plugin.cs" root0="FORCE_HIGHLIGHTING" />
+  </component>
+  <component name="ProjectColorInfo"><![CDATA[{
+  "associatedIndex": 0
+}]]></component>
+  <component name="ProjectId" id="31Iv15nGmnSsZCptgCUI5GI4BJH" />
+  <component name="ProjectViewState">
+    <option name="hideEmptyMiddlePackages" value="true" />
+    <option name="showLibraryContents" value="true" />
+  </component>
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "RunOnceActivity.git.unshallow": "true",
+    "git-widget-placeholder": "master",
+    "node.js.detected.package.eslint": "true",
+    "node.js.detected.package.tslint": "true",
+    "node.js.selected.package.eslint": "(autodetect)",
+    "node.js.selected.package.tslint": "(autodetect)",
+    "nodejs_package_manager_path": "npm",
+    "vue.rearranger.settings.migration": "true"
+  }
+}]]></component>
+  <component name="RunManager">
+    <configuration name="Attach to Unity Editor" type="UNITY_DEBUG_RUN_CONFIGURATION" factoryName="Unity Debug" show_console_on_std_err="false" show_console_on_std_out="false" port="50000" address="localhost">
+      <option name="allowRunningInParallel" value="false" />
+      <option name="listenPortForConnections" value="false" />
+      <option name="pid" />
+      <option name="projectPathOnTarget" />
+      <option name="runtimes">
+        <list />
+      </option>
+      <option name="selectedOptions">
+        <list />
+      </option>
+      <method v="2" />
+    </configuration>
+  </component>
+  <component name="SpellCheckerSettings" RuntimeDictionaries="0" Folders="0" CustomDictionaries="0" DefaultDictionary="application-level" UseSingleDictionary="true" transferred="true" />
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="Default task">
+      <changelist id="164317c8-1547-4fe0-abfe-dfea55294efe" name="Changes" comment="" />
+      <created>1755224183192</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1755224183192</updated>
+      <workItem from="1755224185293" duration="804000" />
+    </task>
+    <servers />
+  </component>
+  <component name="TypeScriptGeneratedFilesManager">
+    <option name="version" value="3" />
+  </component>
+  <component name="UnityProjectConfiguration" hasMinimizedUI="false" />
+  <component name="UnityProjectDiscoverer">
+    <option name="hasUnityReference" value="true" />
+  </component>
+  <component name="VcsManagerConfiguration">
+    <option name="CLEAR_INITIAL_COMMIT_MESSAGE" value="true" />
+  </component>
+</project>

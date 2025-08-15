@@ -1,84 +1,54 @@
 ﻿using System;
 using BepInEx;
+using BepInEx.Logging;
 using UnityEngine;
-using SlugBase.Features;
-using static SlugBase.Features.FeatureTypes;
+using static TheAlchemist.Vars;
 
-namespace SlugTemplate
+namespace TheAlchemist
 {
-    [BepInPlugin(MOD_ID, "Slugcat Template", "0.1.0")]
-    class Plugin : BaseUnityPlugin
+    [BepInDependency("slime-cubed.slugbase")]
+    [BepInDependency("customslugcatutils")]
+    [BepInDependency("com.dual.improved-input-config")]
+    [BepInPlugin(MOD_ID, "The Alchemist", MOD_VERSION)]
+    public class Plugin : BaseUnityPlugin
     {
-        private const string MOD_ID = "author.slugtemplate";
-
-        public static readonly PlayerFeature<float> SuperJump = PlayerFloat("slugtemplate/super_jump");
-        public static readonly PlayerFeature<bool> ExplodeOnDeath = PlayerBool("slugtemplate/explode_on_death");
-        public static readonly GameFeature<float> MeanLizards = GameFloat("slugtemplate/mean_lizards");
-
-
-        // Add hooks
+        public const string MOD_ID = "nuclear.TheAlchemist";
+        public const string MOD_VERSION = "0.2.4";
+        
+        internal new static ManualLogSource Logger;
+        
         public void OnEnable()
         {
-            On.RainWorld.OnModsInit += Extras.WrapInit(LoadResources);
+            Logger = base.Logger;
+            
+            Logger.LogInfo($"Plugin version {MOD_VERSION} awake");
 
-            // Put your custom hooks here!
-            On.Player.Jump += Player_Jump;
-            On.Player.Die += Player_Die;
-            On.Lizard.ctor += Lizard_ctor;
-        }
-        
-        // Load any resources, such as sprites or sounds
-        private void LoadResources(RainWorld rainWorld)
-        {
-        }
-
-        // Implement MeanLizards
-        private void Lizard_ctor(On.Lizard.orig_ctor orig, Lizard self, AbstractCreature abstractCreature, World world)
-        {
-            orig(self, abstractCreature, world);
-
-            if(MeanLizards.TryGet(world.game, out float meanness))
+            Logger.LogInfo("Registering Improved Input Config keybinds");
+            
+            try
             {
-                self.spawnDataEvil = Mathf.Min(self.spawnDataEvil, meanness);
+                EatItemInStomachKey =
+                    Utils.RegisterKeybind("eatStomachItem", "Eat Stomach Item", KeyCode.V, KeyCode.None);
             }
-        }
-
-
-        // Implement SuperJump
-        private void Player_Jump(On.Player.orig_Jump orig, Player self)
-        {
-            orig(self);
-
-            if (SuperJump.TryGet(self, out var power))
+            catch (Exception e)
             {
-                self.jumpBoost *= 1f + power;
+                Logger.LogError(e);
             }
+            
+            Logger.LogInfo("Keybinds registered");
+            
+            PlayerHooks.Apply();
+            
+            //On.RoomCamera.ctor += RoomCameraInit;
         }
 
-        // Implement ExlodeOnDeath
-        private void Player_Die(On.Player.orig_Die orig, Player self)
+        private static void RoomCameraInit(On.RoomCamera.orig_ctor orig, RoomCamera self, RainWorldGame game, int cameraNumber)
         {
-            bool wasDead = self.dead;
+            orig(self, game, cameraNumber);
 
-            orig(self);
-
-            if(!wasDead && self.dead
-                && ExplodeOnDeath.TryGet(self, out bool explode)
-                && explode)
+            foreach (var info in InfoList)
             {
-                // Adapted from ScavengerBomb.Explode
-                var room = self.room;
-                var pos = self.mainBodyChunk.pos;
-                var color = self.ShortCutColor();
-                room.AddObject(new Explosion(room, self, pos, 7, 250f, 6.2f, 2f, 280f, 0.25f, self, 0.7f, 160f, 1f));
-                room.AddObject(new Explosion.ExplosionLight(pos, 280f, 1f, 7, color));
-                room.AddObject(new Explosion.ExplosionLight(pos, 230f, 1f, 3, new Color(1f, 1f, 1f)));
-                room.AddObject(new ExplosionSpikes(room, pos, 14, 30f, 9f, 7f, 170f, color));
-                room.AddObject(new ShockWave(pos, 330f, 0.045f, 5, false));
-
-                room.ScreenMovement(pos, default, 1.3f);
-                room.PlaySound(SoundID.Bomb_Explode, pos);
-                room.InGameNoise(new Noise.InGameNoise(pos, 9000f, self, 1f));
+                
             }
         }
     }

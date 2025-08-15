@@ -1,0 +1,22 @@
+﻿{
+	"id": "nuclear.TheAlchemist",
+	"name": "The Alchemist",
+	"version": "0.1.0",
+	"authors": "Nuclear Pasta",
+	"description": "A Slugcat sent by a mysterious and distant Iterator.",
+	"requirements": [
+		"moreslugcats",
+		"slime-cubed.slugbase",
+		"customslugcatutils",
+		"improved-input-config"
+	],
+	"requirements_names": [
+		"More Slugcats Expansion",
+		"SlugBase",
+		"Custom Slugcat Utils",
+		"Improved Input Config: Extended"
+	],
+	"tags": [
+		"Custom Slugcat"
+	]
+}

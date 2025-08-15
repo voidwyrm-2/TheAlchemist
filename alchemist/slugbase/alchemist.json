@@ -1,0 +1,25 @@
+{
+    "id": "nuclear.Alchemist",
+    "name": "The Alchemist",
+    "description": "A Slugcat sent by a mysterious and distant Iterator.",
+    "features": {
+        "color": "9cf0a4",
+        "food_min": 5,
+        "food_max": 12,
+        "diet": {
+            "base": "Gourmand"
+        },
+        "can_maul": true,
+        "the_mark": true,
+        "karma": 4,
+        "karma_cap": 4,
+        "start_room": "SL_ROOF03",
+        "spawn_pos": [
+            5,
+            20
+        ],
+        "world_state": "Red",
+        "has_dreams": false,
+        "expedition_enabled": false
+    }
+}

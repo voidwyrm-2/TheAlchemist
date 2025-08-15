@@ -1,0 +1,38 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+    
+    <PropertyGroup>
+        <TargetFramework>net48</TargetFramework>
+        <LangVersion>11</LangVersion>
+        <DebugType>portable</DebugType>
+        <RootNamespace>TheAlchemist</RootNamespace>
+    </PropertyGroup>
+    
+    <ItemGroup>
+        <Reference Include="../lib/*.dll">
+            <Private>false</Private>
+        </Reference>
+    </ItemGroup>
+    
+    <Target Name="GenerateMod" AfterTargets="PostBuildEvent">
+	<ItemGroup>
+		<RemovePlugins Include="../alchemist/plugins/*.dll" />
+	</ItemGroup>
+	<ItemGroup>
+		<RemoveArtifacts Include="../alchemist/plugins/*.pdb" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<CopyPlugins Include="$(TargetPath)" />
+	</ItemGroup>
+	<ItemGroup>
+		<CopyArtifacts Include="$(TargetPath)*.pdb" />
+	</ItemGroup>
+		
+        <Delete Files="@(RemovePlugins)" />
+        <Delete Files="@(RemoveArtifacts)" />
+
+        <Copy SourceFiles="@(CopyPlugins)" DestinationFolder="../alchemist/newest/plugins/" />
+        <Copy SourceFiles="$(TargetDir)TheAlchemist.pdb" DestinationFolder="../alchemist/newest/plugins/" />
+    </Target>
+    
+</Project>
