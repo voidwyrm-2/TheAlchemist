@@ -4,6 +4,16 @@
     "description": "A Slugcat sent by a mysterious and distant Iterator.",
     "features": {
         "color": "796b94",
+        "custom_colors": [
+            {
+                "name": "Body",
+                "story": "796b94"
+            },
+            {
+                "name": "Eyes",
+                "story": "cd7032"
+            }
+        ],
         "food_min": 5,
         "food_max": 12,
         "diet": {
