@@ -126,10 +126,56 @@ public static class PlayerHooks
                 info.MatterToFoodTicker = 0;
             }
 
-            //if (self.IsPressed(SynthesisKey) && self.objectInStomach == null)
-            //{
+            if (self.IsPressed(SynthesisKey) && self.objectInStomach == null)
+            {
+                var code = $"{Input.inputString}";
                 
-            //}
+                if (code.StartsWith("n"))
+                    code = code.Substring(1);
+                else if (code.EndsWith("n"))
+                    code = code.TrimEnd('n');
+
+                var type = code switch
+                {
+                    "0" => AbstractPhysicalObject.AbstractObjectType.Rock,
+                    "1" => AbstractPhysicalObject.AbstractObjectType.Spear,
+                    _ => null
+                };
+                
+                if (code != "")
+                    Logger.LogDebug($"synthesis code: '{code}', valid? {type != null}");
+
+                if (type != null)
+                {
+                    AbstractPhysicalObject obj;
+
+                    var world = self.room.world;
+                    var pos = self.room.GetWorldCoordinate(self.mainBodyChunk.pos);
+                    var id = self.room.game.GetNewID();
+
+                    if (type == AbstractPhysicalObject.AbstractObjectType.Spear)
+                        obj = new AbstractSpear(world, null, pos, id, false);
+                    else
+                        obj = new AbstractPhysicalObject(world, type, null, pos, id);
+
+                    
+                    var cost = Utils.GetMatterValueForItem(obj);
+
+                    if (info.Matter >= cost)
+                    {
+                        var originalMatter = info.Matter;
+                        
+                        info.Matter -= cost;
+                        self.objectInStomach = obj;
+                        
+                        Logger.LogDebug($"Created a {type} for {cost} matter; matter was {originalMatter}, it's now {info.Matter}");
+                    }
+                    else
+                    {
+                        Logger.LogDebug($"Not enough matter to create {type}; need {cost}, but have {info.Matter}");
+                    }
+                }
+            }
         }
     }
 
@@ -139,8 +185,9 @@ public static class PlayerHooks
         {
             if (obj is Spear)
                 return true;
-            
-            return self.FoodInStomach == self.MaxFoodInStomach && obj is IPlayerEdible;
+
+            if (self.FoodInStomach == self.MaxFoodInStomach && obj is IPlayerEdible)
+                return true;
         }
 
         return orig(self, obj);
