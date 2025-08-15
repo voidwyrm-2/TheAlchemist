@@ -1,6 +1,7 @@
 ﻿using System;
 using BepInEx;
 using BepInEx.Logging;
+using HUD;
 using UnityEngine;
 using static TheAlchemist.Vars;
 
@@ -13,7 +14,7 @@ namespace TheAlchemist
     public class Plugin : BaseUnityPlugin
     {
         public const string MOD_ID = "nuclear.TheAlchemist";
-        public const string MOD_VERSION = "0.2.4";
+        public const string MOD_VERSION = "0.3.0";
         
         internal new static ManualLogSource Logger;
         
@@ -28,7 +29,9 @@ namespace TheAlchemist
             try
             {
                 EatItemInStomachKey =
-                    Utils.RegisterKeybind("eatStomachItem", "Eat Stomach Item", KeyCode.V, KeyCode.None);
+                    Utils.RegisterKeybind("eatStomachItem", "Convert Stomach Item", KeyCode.V, KeyCode.None);
+                ConvertFoodToMatterKey =
+                    Utils.RegisterKeybind("convertFoodToMateter", "Convert Food", KeyCode.B, KeyCode.None);
             }
             catch (Exception e)
             {
@@ -39,17 +42,14 @@ namespace TheAlchemist
             
             PlayerHooks.Apply();
             
-            //On.RoomCamera.ctor += RoomCameraInit;
+            On.HUD.HUD.ctor += HUDInit;
         }
 
-        private static void RoomCameraInit(On.RoomCamera.orig_ctor orig, RoomCamera self, RainWorldGame game, int cameraNumber)
+        private static void HUDInit(On.HUD.HUD.orig_ctor orig, HUD.HUD self, FContainer[] fcontainers, RainWorld rainworld, IOwnAHUD owner)
         {
-            orig(self, game, cameraNumber);
+            orig(self, fcontainers, rainworld, owner);
 
-            foreach (var info in InfoList)
-            {
-                
-            }
+            self.AddPart(new AlchemistMatterLabels(self, rainworld));
         }
     }
 }

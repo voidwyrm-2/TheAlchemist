@@ -1,5 +1,4 @@
 using ImprovedInput;
-using MoreSlugcats;
 using UnityEngine;
 
 namespace TheAlchemist;
@@ -14,20 +13,37 @@ public static class Utils
     internal static bool IsAlchem(this Player self) => self.SlugCatClass == Alchem;
     
     internal static AlchemistInfo GetInfo(this Player self) =>
-        Alchemists.GetValue(self, _ => new AlchemistInfo());
+        Alchemists.GetValue(self, _ => new AlchemistInfo(self));
     
-    internal static int GetMatterValueForItem(this AbstractPhysicalObject.AbstractObjectType self)
+    internal static int GetMatterValueForItem(this AbstractPhysicalObject self)
     {
-        if (self == AbstractPhysicalObject.AbstractObjectType.Rock)
-            return 10;
-        if (self == AbstractPhysicalObject.AbstractObjectType.Spear)
-            return 40;
-        if (self == AbstractPhysicalObject.AbstractObjectType.DataPearl)
+        var type = self.type;
+        
+        if (type == AbstractPhysicalObject.AbstractObjectType.Rock)
+            return 5;
+
+        if (type == AbstractPhysicalObject.AbstractObjectType.Spear)
+        {
+            var spear = (self as AbstractSpear)!;
+
+            if (spear.explosive)
+                return 50;
+
+            if (spear.electric)
+                return 80;
+            
+            return 30;
+        }
+                
+        if (type == AbstractPhysicalObject.AbstractObjectType.DataPearl)
+            return 70;
+        
+        if (type == AbstractPhysicalObject.AbstractObjectType.VultureMask)
             return 100;
-        if (self == AbstractPhysicalObject.AbstractObjectType.VultureMask)
-            return 200;
-        if (self == DLCSharedEnums.AbstractObjectType.SingularityBomb)
-            return 600;
+        
+        if (type == DLCSharedEnums.AbstractObjectType.SingularityBomb)
+            return 800;
+        
         return 0;
     }
 }
