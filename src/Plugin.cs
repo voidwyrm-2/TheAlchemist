@@ -14,7 +14,7 @@ namespace TheAlchemist
     public class Plugin : BaseUnityPlugin
     {
         public const string MOD_ID = "nuclear.TheAlchemist";
-        public const string MOD_VERSION = "0.4.5";
+        public const string MOD_VERSION = "0.4.23";
         
         internal new static ManualLogSource Logger;
         
@@ -22,7 +22,7 @@ namespace TheAlchemist
         {
             Logger = base.Logger;
             
-            Logger.LogInfo($"Plugin version {MOD_VERSION} awake");
+            Logger.LogInfo($"Plugin version {MOD_VERSION} is awake.");
 
             Logger.LogInfo("Registering Improved Input Config keybinds");
             

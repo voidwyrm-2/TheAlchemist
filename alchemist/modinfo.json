@@ -1,7 +1,7 @@
 ﻿{
 	"id": "nuclear.TheAlchemist",
 	"name": "The Alchemist",
-	"version": "0.4.5",
+	"version": "0.4.23",
 	"authors": "Nuclear Pasta",
 	"description": "A Slugcat sent by a mysterious and distant Iterator.",
 	"requirements": [

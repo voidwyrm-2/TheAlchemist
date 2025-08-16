@@ -7,6 +7,7 @@ internal class AlchemistInfo
     internal int Matter;
     internal int StomachEatTicker = 0;
     internal int MatterToFoodTicker = 0;
+    internal int SynthCodeKeyCooldown = 0;
     internal string SynthCode = "";
     
     internal bool Saved { get; private set; }

@@ -15,15 +15,22 @@ public static class Utils
     internal static AlchemistInfo GetInfo(this Player self) =>
         Alchemists.GetValue(self, _ => new AlchemistInfo(self));
 
+    internal static string Format(this AbstractPhysicalObject obj) => obj switch
+    {
+        AbstractSpear spear => $"(Spear, explosive? {spear.explosive}, electric? {spear.electric})",
+        AbstractCreature crit => $"(Creature, template.type? {crit.creatureTemplate.type}, meatLeft? {crit.state.meatLeft}, dead? {crit.state.dead}), swallowable? {crit.IsSwallowable()}",
+        _ => $"(Object, type? {obj.type})"
+    };
+
     internal static bool IsSwallowable(this AbstractCreature creature) =>
-        SwallowableCreatures.Contains(creature.creatureTemplate.TopAncestor().type);
+        SwallowableCreatures.Contains(creature.creatureTemplate.type);
     
     internal static int GetMatterValueForObject(AbstractPhysicalObject obj)
     {
         return obj switch
         {
             AbstractSpear spear => GetMatterValueForSpear(spear),
-            AbstractCreature creature => GetMatterValueForCreature(creature.creatureTemplate.TopAncestor().type),
+            AbstractCreature crit => crit.creatureTemplate.meatPoints * FoodPipMatterCost,
             _ => GetMatterValueForType(obj.type)
         };
     }
@@ -37,23 +44,6 @@ public static class Utils
             return 60;
             
         return 20;
-    }
-
-    private static int GetMatterValueForCreature(CreatureTemplate.Type type)
-    {
-        if (type == CreatureTemplate.Type.Fly)
-            return 7;
-        
-        if (type == CreatureTemplate.Type.GreenLizard)
-            return 30;
-        
-        if (type == CreatureTemplate.Type.PinkLizard)
-            return 40;
-        
-        if (type == CreatureTemplate.Type.RedLizard)
-            return 100;
-
-        return 0;
     }
 
     private static int GetMatterValueForType(AbstractPhysicalObject.AbstractObjectType type)
