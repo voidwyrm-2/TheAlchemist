@@ -211,6 +211,10 @@ public static class PlayerHooks
                     }
                 }
             }
+            else
+            {
+                info.SynthCode = "";
+            }
         }
     }
 
