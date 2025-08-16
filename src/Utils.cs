@@ -1,3 +1,4 @@
+using System;
 using ImprovedInput;
 using UnityEngine;
 
@@ -15,6 +16,16 @@ public static class Utils
     internal static AlchemistInfo GetInfo(this Player self) =>
         Alchemists.GetValue(self, _ => new AlchemistInfo(self));
 
+    internal static Func<World, WorldCoordinate, EntityID, AbstractPhysicalObject> DefaultSynth(AbstractPhysicalObject.AbstractObjectType type)
+    {
+        return (world, pos, id) => new AbstractPhysicalObject(world, type, null, pos, id);;
+    }
+    
+    internal static Func<World, WorldCoordinate, EntityID, AbstractPhysicalObject> DefaultSpearSynth(bool explosive, bool electric)
+    {
+        return (world, pos, id) => new AbstractSpear(world, null, pos, id, explosive, electric);
+    }
+
     internal static string Format(this AbstractPhysicalObject obj) => obj switch
     {
         AbstractSpear spear => $"(Spear, explosive? {spear.explosive}, electric? {spear.electric})",
@@ -23,10 +34,20 @@ public static class Utils
     };
 
     internal static bool IsSwallowable(this AbstractCreature creature) =>
-        SwallowableCreatures.Contains(creature.creatureTemplate.type);
+        !NotSwallowableCreatures.Contains(creature.creatureTemplate.type);
     
     internal static int GetMatterValueForObject(AbstractPhysicalObject obj)
     {
+        obj.Realize();
+        if (obj.realizedObject is IPlayerEdible edible)
+        {
+            var value = edible.FoodPoints;
+            obj.Abstractize(new WorldCoordinate());
+            return value;
+        }
+        
+        obj.Abstractize(new WorldCoordinate());
+        
         return obj switch
         {
             AbstractSpear spear => GetMatterValueForSpear(spear),
@@ -48,8 +69,8 @@ public static class Utils
 
     private static int GetMatterValueForType(AbstractPhysicalObject.AbstractObjectType type)
     {
-        if (type == AbstractPhysicalObject.AbstractObjectType.Mushroom)
-            return 7;
+        if (type == AbstractPhysicalObject.AbstractObjectType.SLOracleSwarmer || type == AbstractPhysicalObject.AbstractObjectType.NSHSwarmer)
+            return -10000;
         
         if (type == AbstractPhysicalObject.AbstractObjectType.Rock)
             return 4;
@@ -64,6 +85,9 @@ public static class Utils
             return 15;
                 
         if (type == AbstractPhysicalObject.AbstractObjectType.DataPearl)
+            return 40;
+        
+        if (type == AbstractPhysicalObject.AbstractObjectType.SSOracleSwarmer)
             return 40;
         
         if (type == AbstractPhysicalObject.AbstractObjectType.VultureMask)

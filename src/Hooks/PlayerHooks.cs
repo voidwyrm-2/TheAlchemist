@@ -15,11 +15,27 @@ public static class PlayerHooks
     internal static void Apply()
     {
         On.Player.ctor += PlayerInit;
-        On.Player.CanBeSwallowed += PlayerAllowItemSwallowing;
-        On.Player.Update += PlayerUpdate;
+        On.Player.CanBeSwallowed += AllowItemSwallowing;
+        On.Player.Update += OnUpdate;
         On.ShelterDoor.Close += SavePlayerData;
-        On.Player.SwallowObject += PlayerOnSwallowObject;
-        On.Player.GrabUpdate += PlayerOnGrabUpdate;
+        On.Player.SwallowObject += OnSwallowObject;
+        On.Player.GrabUpdate += OnGrabUpdate;
+        On.Player.PermaDie += OnPermaDie;
+    }
+
+    private static void OnPermaDie(On.Player.orig_PermaDie orig, Player self)
+    {
+        if (self.IsAlchem())
+        {
+            var info = self.GetInfo();
+
+            info.Matter -= MatterLostOnDeath;
+            
+            if (info.Matter < 0)
+                info.Matter = 0;
+        }
+            
+        orig(self);
     }
 
     private static bool IsSwallowableCreature(Player player, Creature crit)
@@ -31,7 +47,7 @@ public static class PlayerHooks
         return false;
     }
 
-    private static void PlayerOnGrabUpdate(On.Player.orig_GrabUpdate orig, Player self, bool eu)
+    private static void OnGrabUpdate(On.Player.orig_GrabUpdate orig, Player self, bool eu)
     {
         PhysicalObject grasp = null;
 
@@ -63,7 +79,7 @@ public static class PlayerHooks
         }
     }
 
-    private static void PlayerOnSwallowObject(On.Player.orig_SwallowObject orig, Player self, int grasp)
+    private static void OnSwallowObject(On.Player.orig_SwallowObject orig, Player self, int grasp)
     {
         if (self.IsAlchem())
             Logger.LogDebug($"Alchemist swallowing {self.grasps[grasp].grabbed.abstractPhysicalObject.Format()}");
@@ -91,7 +107,7 @@ public static class PlayerHooks
         orig(self);
     }
 
-    private static void PlayerUpdate(On.Player.orig_Update orig, Player self, bool eu)
+    private static void OnUpdate(On.Player.orig_Update orig, Player self, bool eu)
     {
         orig(self, eu);
 
@@ -224,30 +240,20 @@ public static class PlayerHooks
                     return;
                 }
 
-                var type = synthCode switch
+                AbstractPhysicalObject obj = null;
+
+                if (synthCode >= 0 && synthCode < SynthItems.Length)
                 {
-                    0 => AbstractPhysicalObject.AbstractObjectType.Rock,
-                    1 => AbstractPhysicalObject.AbstractObjectType.Spear,
-                    2 => AbstractPhysicalObject.AbstractObjectType.ScavengerBomb,
-                    3 => DLCSharedEnums.AbstractObjectType.SingularityBomb,
-                    _ => null
-                };
-
-                Logger.LogDebug($"synthesis code: '{synthCode}', valid? {type != null}");
-
-                if (type != null)
-                {
-                    AbstractPhysicalObject obj;
-
                     var world = self.room.world;
                     var pos = self.room.GetWorldCoordinate(self.mainBodyChunk.pos);
                     var id = self.room.game.GetNewID();
+                    obj = SynthItems[synthCode](world, pos, id);
+                }
 
-                    if (type == AbstractPhysicalObject.AbstractObjectType.Spear)
-                        obj = new AbstractSpear(world, null, pos, id, false);
-                    else
-                        obj = new AbstractPhysicalObject(world, type, null, pos, id);
-                    
+                Logger.LogDebug($"synthesis code: '{synthCode}', valid? {obj != null}");
+
+                if (obj != null)
+                {
                     var cost = Utils.GetMatterValueForObject(obj);
 
                     if (info.Matter >= cost)
@@ -257,11 +263,11 @@ public static class PlayerHooks
                         info.Matter -= cost;
                         self.objectInStomach = obj;
                         
-                        Logger.LogDebug($"Created a {type} for {cost} matter; matter was {originalMatter}, it's now {info.Matter}");
+                        Logger.LogDebug($"Created a {obj.Format()} for {cost} matter; matter was {originalMatter}, it's now {info.Matter}");
                     }
                     else
                     {
-                        Logger.LogDebug($"Not enough matter to create {type}; need {cost}, but have {info.Matter}");
+                        Logger.LogDebug($"Not enough matter to create {obj.Format()}; need {cost}, but have {info.Matter}");
                     }
                 }
             }
@@ -289,20 +295,24 @@ public static class PlayerHooks
         return false;
     }
 
-    private static bool PlayerAllowItemSwallowing(On.Player.orig_CanBeSwallowed orig, Player self, PhysicalObject obj)
+    private static bool AllowItemSwallowing(On.Player.orig_CanBeSwallowed orig, Player self, PhysicalObject obj)
     {
-        //if (self.IsAlchem())
-        //    Logger.LogDebug($"Alchemist is trying to swallow an object (which is a {obj.abstractPhysicalObject.Format()}), eatMeat: {self.eatMeat}");
-
-        if (self.IsAlchem() && CanSwallowThing(self, obj))
+        if (self.input[0].pckp)
         {
-            Logger.LogDebug("Item can be swallowed");
-            return true;
+            if (self.IsAlchem())
+                Logger.LogDebug(
+                    $"Alchemist is trying to swallow an object (which is a {obj.abstractPhysicalObject.Format()})");
+
+            if (self.IsAlchem() && CanSwallowThing(self, obj))
+            {
+                Logger.LogDebug("Item can be swallowed");
+                return true;
+            }
+
+            if (self.IsAlchem())
+                Logger.LogDebug("Swallowing failed");
         }
-        
-        //if (self.IsAlchem())
-        //    Logger.LogDebug("Swallowing failed");
-        
+
         return orig(self, obj);
     }
 
@@ -322,12 +332,25 @@ public static class PlayerHooks
                 Logger.LogInfo($"Player {playerNumber} was already initialized, previous info cleared");
             }
 
-            var save = SlugBase.SaveData.SaveDataExtension.GetSlugBaseData(self.room.game.GetStorySession.saveState.miscWorldSaveData);
-            var result = AlchemistInfo.LoadFromSave(save, self);
-            Alchemists.Add(self, result.Info);
-            InfoMap.Add(playerNumber, result.Info);
+            AlchemistInfo info;
+            bool loaded;
 
-            if (result.Loaded)
+            if (self.room.game.IsStorySession)
+            {
+                var save = SlugBase.SaveData.SaveDataExtension.GetSlugBaseData(self.room.game.GetStorySession.saveState.miscWorldSaveData);
+                
+                (info, loaded) = AlchemistInfo.LoadFromSave(save, self);
+            }
+            else
+            {
+                loaded = false;
+                info = new AlchemistInfo(self);
+            }
+
+            Alchemists.Add(self, info);
+            InfoMap.Add(playerNumber, info);
+
+            if (loaded)
                 Logger.LogInfo($"Player {playerNumber} info loaded from save");
             else
                 Logger.LogInfo($"Player {playerNumber} info initialized");

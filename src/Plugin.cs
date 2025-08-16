@@ -14,7 +14,7 @@ namespace TheAlchemist
     public class Plugin : BaseUnityPlugin
     {
         public const string MOD_ID = "nuclear.TheAlchemist";
-        public const string MOD_VERSION = "0.4.23";
+        public const string MOD_VERSION = "0.5.0";
         
         internal new static ManualLogSource Logger;
         
@@ -51,7 +51,7 @@ namespace TheAlchemist
         {
             orig(self, fcontainers, rainworld, owner);
 
-            self.AddPart(new AlchemistMatterLabels(self, rainworld));
+            self.AddPart(new AlchemistHUD(self, rainworld));
         }
     }
 }
