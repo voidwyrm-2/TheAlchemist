@@ -149,12 +149,14 @@ public static class PlayerHooks
             }
             else if (self.objectInStomach == null && info.SynthCode.Length > 0)
             {
+                var stringCode = info.SynthCode;
+                info.SynthCode = "";
+                
                 int synthCode;
 
                 try
                 {
-                    synthCode = int.Parse(info.SynthCode);
-                    info.SynthCode = "";
+                    synthCode = int.Parse(stringCode);
                 }
                 catch (FormatException e)
                 {

@@ -2,7 +2,7 @@
   "Title": "The Alchemist",
   "Description": "A Slugcat sent by a mysterious and distant Iterator.",
   "ID": "nuclear.TheAlchemist",
-  "Version": "0.3.18",
+  "Version": "0.4.3",
   "TargetGameVersion": "v1.9.06",
   "Requirements": "moreslugcats,slime-cubed.slugbase,customslugcatutils,improved-input-config",
   "RequirementNames": "More Slugcats Expansion,SlugBase,Custom Slugcat Utils,Improved Input Config: Extended",
