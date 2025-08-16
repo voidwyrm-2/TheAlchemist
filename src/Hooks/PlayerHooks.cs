@@ -1,5 +1,7 @@
+using System;
 using ImprovedInput;
 using UnityEngine;
+using Random = UnityEngine.Random;
 
 namespace TheAlchemist;
 
@@ -14,6 +16,15 @@ public static class PlayerHooks
         On.Player.CanBeSwallowed += PlayerAllowItemSwallowing;
         On.Player.Update += PlayerUpdate;
         On.ShelterDoor.Close += SavePlayerData;
+        On.Player.EatMeatUpdate += Veganism;
+    }
+
+    private static void Veganism(On.Player.orig_EatMeatUpdate orig, Player self, int graspIndex)
+    {
+        if (self.IsAlchem() && self.grasps[graspIndex].grabbed is Creature creature && (creature.State.meatLeft == 0 || self.FoodInStomach == self.MaxFoodInStomach))
+            return;
+        
+        orig(self, graspIndex);
     }
 
     private static void SavePlayerData(On.ShelterDoor.orig_Close orig, ShelterDoor self)
@@ -64,7 +75,7 @@ public static class PlayerHooks
 
                         self.objectInStomach = null;
 
-                        info.Matter += Utils.GetMatterValueForItem(obj);
+                        info.Matter += Utils.GetMatterValueForObject(obj);
                         
                         Logger.LogDebug($"Consumed stomach item (which was a {obj.type}); matter was {originalMatter}, it's now {info.Matter}");
                     }
@@ -115,10 +126,10 @@ public static class PlayerHooks
                     self.room.AddObject(new Spark(self.mainBodyChunk.pos, vel, color, null, 40, 70));
                     
                     //self.room.AddObject(new Lightning(self.room, 2f + Random.value * 3, false));
-                    self.room.AddObject(new KarmicArmor.EnergyStrand(4 + (int)(Random.value * 10), 0.5f + Random.value * 2)
-                    {
-                        pos = self.mainBodyChunk.pos
-                    });
+                    //self.room.AddObject(new KarmicArmor.EnergyStrand(4 + (int)(Random.value * 10), 0.5f + Random.value * 2)
+                    //{
+                    //    pos = self.mainBodyChunk.pos
+                    //});
                 }
             }
             else
@@ -126,24 +137,46 @@ public static class PlayerHooks
                 info.MatterToFoodTicker = 0;
             }
 
-            if (self.IsPressed(SynthesisKey) && self.objectInStomach == null)
+            if (self.IsPressed(SynthesisKey))
             {
-                var code = $"{Input.inputString}";
-                
-                if (code.StartsWith("n"))
-                    code = code.Substring(1);
-                else if (code.EndsWith("n"))
-                    code = code.TrimEnd('n');
+                var digit = $"{Input.inputString}".Trim().Trim('n');
 
-                var type = code switch
+                if (digit.Length > 0 && digit[0] >= '0' && digit[0] <= '9')
                 {
-                    "0" => AbstractPhysicalObject.AbstractObjectType.Rock,
-                    "1" => AbstractPhysicalObject.AbstractObjectType.Spear,
+                    info.SynthCode += digit[0];
+                    Logger.LogDebug($"Digit added: '{digit}', synthCode is now '{info.SynthCode}'");
+                }
+            }
+            else if (self.objectInStomach == null && info.SynthCode.Length > 0)
+            {
+                int synthCode;
+
+                try
+                {
+                    synthCode = int.Parse(info.SynthCode);
+                    info.SynthCode = "";
+                }
+                catch (FormatException e)
+                {
+                    Logger.LogError($"Cannot parse synthesis code: {e.Message}");
+                    return;
+                }
+                catch (OverflowException e)
+                {
+                    Logger.LogError($"Cannot parse synthesis code: {e.Message}");
+                    return;
+                }
+
+                var type = synthCode switch
+                {
+                    0 => AbstractPhysicalObject.AbstractObjectType.Rock,
+                    1 => AbstractPhysicalObject.AbstractObjectType.Spear,
+                    2 => AbstractPhysicalObject.AbstractObjectType.ScavengerBomb,
+                    3 => DLCSharedEnums.AbstractObjectType.SingularityBomb,
                     _ => null
                 };
-                
-                if (code != "")
-                    Logger.LogDebug($"synthesis code: '{code}', valid? {type != null}");
+
+                Logger.LogDebug($"synthesis code: '{synthCode}', valid? {type != null}");
 
                 if (type != null)
                 {
@@ -159,7 +192,7 @@ public static class PlayerHooks
                         obj = new AbstractPhysicalObject(world, type, null, pos, id);
 
                     
-                    var cost = Utils.GetMatterValueForItem(obj);
+                    var cost = Utils.GetMatterValueForObject(obj);
 
                     if (info.Matter >= cost)
                     {
@@ -184,6 +217,9 @@ public static class PlayerHooks
         if (self.IsAlchem() && self.objectInStomach == null)
         {
             if (obj is Spear)
+                return true;
+            
+            if (obj.abstractPhysicalObject is AbstractCreature creature && creature.IsSwallowable() && (creature.state.meatLeft == 0 || self.FoodInStomach == self.MaxFoodInStomach))
                 return true;
 
             if (self.FoodInStomach == self.MaxFoodInStomach && obj is IPlayerEdible)

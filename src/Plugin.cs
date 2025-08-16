@@ -14,7 +14,7 @@ namespace TheAlchemist
     public class Plugin : BaseUnityPlugin
     {
         public const string MOD_ID = "nuclear.TheAlchemist";
-        public const string MOD_VERSION = "0.3.18";
+        public const string MOD_VERSION = "0.4.3";
         
         internal new static ManualLogSource Logger;
         
@@ -33,7 +33,7 @@ namespace TheAlchemist
                 ConvertMatterToFoodKey =
                     Utils.RegisterKeybind("convertToFood", "Convert Matter To Food", KeyCode.B, KeyCode.None);
                 SynthesisKey =
-                    Utils.RegisterKeybind("synthesis", "Synthesis Object", KeyCode.N, KeyCode.None);
+                    Utils.RegisterKeybind("synthesis", "Synthesize Object", KeyCode.N, KeyCode.None);
             }
             catch (Exception e)
             {
