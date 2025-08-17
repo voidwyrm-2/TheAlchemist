@@ -14,8 +14,10 @@ internal static class Vars
     
     internal static SlugcatStats.Name Alchem = new("nuclear.Alchemist");
 
+    internal const int ObjectToMatterTicks = 28;
+    internal const int FoodToMatterTicks = 28;
+    
     internal const int FoodPipMatterCost = 20;
-
     internal const int MatterLostOnDeath = 80;
 
     internal static readonly HashSet<CreatureTemplate.Type> NotSwallowableCreatures = new(new []
@@ -33,8 +35,9 @@ internal static class Vars
         DefaultSpearSynth(true, false),
         DefaultSpearSynth(false, true),
         DefaultSynth(AbstractPhysicalObject.AbstractObjectType.Lantern),
-        DefaultSynth(AbstractPhysicalObject.AbstractObjectType.DataPearl),
-        DefaultSynth(DLCSharedEnums.AbstractObjectType.SingularityBomb)
+        (world, coord, id) =>
+            new DataPearl.AbstractDataPearl(world, AbstractPhysicalObject.AbstractObjectType.DataPearl, null, coord, id, 0, 0, null, DataPearl.AbstractDataPearl.DataPearlType.Misc),
+        MscSynth(DLCSharedEnums.AbstractObjectType.SingularityBomb)
     };
         
     internal static PlayerKeybind ConvertToMatterKey;

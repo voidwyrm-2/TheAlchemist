@@ -14,11 +14,19 @@
                 "story": "cd7032"
             }
         ],
+        "auto_grab_batflies": false,
         "food_min": 5,
         "food_max": 12,
         "diet": {
             "base": "Gourmand"
         },
+        "weight": 1.1,
+        "walk_speed": 1.15,
+        "climb_speed": 1.2,
+        "tunnel_speed": 1.2,
+        "throw_skill": 2,
+        "crouch_stealth": 0.7,
+        "loudness": 1.5,
         "can_maul": false,
         "the_mark": true,
         "karma": 4,
@@ -30,6 +38,7 @@
         ],
         "world_state": "Red",
         "has_dreams": false,
-        "expedition_enabled": false
+        "expedition_enabled": false,
+        "expedition_description": "Synthesize your path to victory.<LINE>Make your creator proud."
     }
 }

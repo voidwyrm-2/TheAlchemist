@@ -15,11 +15,8 @@ public static class PlayerHooks
     internal static void Apply()
     {
         On.Player.ctor += PlayerInit;
-        On.Player.CanBeSwallowed += AllowItemSwallowing;
         On.Player.Update += OnUpdate;
         On.ShelterDoor.Close += SavePlayerData;
-        On.Player.SwallowObject += OnSwallowObject;
-        On.Player.GrabUpdate += OnGrabUpdate;
         On.Player.PermaDie += OnPermaDie;
     }
 
@@ -38,70 +35,25 @@ public static class PlayerHooks
         orig(self);
     }
 
-    private static bool IsSwallowableCreature(Player player, Creature crit)
-    {
-        if (player.IsAlchem() && (crit.State.meatLeft <= 0 || player.FoodInStomach >= player.MaxFoodInStomach) &&
-            crit.abstractCreature.IsSwallowable() && crit.dead)
-            return true;
-        
-        return false;
-    }
-
-    private static void OnGrabUpdate(On.Player.orig_GrabUpdate orig, Player self, bool eu)
-    {
-        PhysicalObject grasp = null;
-
-        if (self.grasps[0] != null)
-        {
-            grasp = self.grasps[0].grabbed;
-        }
-        else if (self.grasps[1] != null)
-        {
-            grasp = self.grasps[1].grabbed;
-        }
-
-        var foodValue = -1;
-
-        if (grasp is Creature crit && IsSwallowableCreature(self, crit))
-        {
-            foodValue = crit.Template.meatPoints;
-            crit.Template.meatPoints = 0;
-        }
-
-        try
-        {
-            orig(self, eu);
-        }
-        finally
-        {
-            if (foodValue > -1)
-                (grasp as Creature)!.Template.meatPoints = foodValue;
-        }
-    }
-
-    private static void OnSwallowObject(On.Player.orig_SwallowObject orig, Player self, int grasp)
-    {
-        if (self.IsAlchem())
-            Logger.LogDebug($"Alchemist swallowing {self.grasps[grasp].grabbed.abstractPhysicalObject.Format()}");
-
-        orig(self, grasp);
-    }
-
     private static void SavePlayerData(On.ShelterDoor.orig_Close orig, ShelterDoor self)
     {
-        foreach (var info in InfoMap.Values)
+        if (self.room.game.IsStorySession)
         {
-            Alchemists.Remove(info.Owner);
-            
-            if (info.Saved || !self.room.game.IsStorySession)
-                continue;
-                
-            Logger.LogInfo($"Saving info for player {info.PlayerNumber}");
-            var save = SlugBase.SaveData.SaveDataExtension.GetSlugBaseData(self.room.game.GetStorySession.saveState.miscWorldSaveData);
-            info.Save(save);
-            Logger.LogInfo($"Saved info for player {info.PlayerNumber}");
+            foreach (var info in InfoMap.Values)
+            {
+                Alchemists.Remove(info.Owner);
+
+                if (info.Saved)
+                    continue;
+
+                Logger.LogInfo($"Saving info for player {info.PlayerNumber}");
+                var save = SlugBase.SaveData.SaveDataExtension.GetSlugBaseData(self.room.game.GetStorySession.saveState
+                    .miscWorldSaveData);
+                info.Save(save);
+                Logger.LogInfo($"Saved info for player {info.PlayerNumber}");
+            }
         }
-        
+
         InfoMap.Clear();
 
         orig(self);
@@ -115,52 +67,49 @@ public static class PlayerHooks
         {
             var info = self.GetInfo();
 
-            if (self.IsPressed(ConvertToMatterKey) && (self.objectInStomach != null || self.FoodInStomach > 0))
+            if (self.IsPressed(ConvertToMatterKey) && (self.OccupiedHand() > -1 || self.FoodInStomach > 0))
             {
-                info.StomachEatTicker++;
+                info.ObjectToMatterTicker++;
                 
                 self.Blink(2);
 
-                if (info.StomachEatTicker >= 33)
+                if (info.ObjectToMatterTicker >= ObjectToMatterTicks)
                 {
                     self.Blink(4);
                     
-                    info.StomachEatTicker = 0;
+                    info.ObjectToMatterTicker = 0;
                     
                     var originalMatter = info.Matter;
 
-                    if (self.objectInStomach != null)
+                    if (self.OccupiedHand() > -1)
                     {
-                        var obj = self.objectInStomach;
-
-                        self.objectInStomach = null;
+                        var index = self.OccupiedHand();
+                        var obj = self.grasps[index].grabbed;
 
                         var matter = Utils.GetMatterValueForObject(obj);
+                        
+                        self.SpawnObjectToMatterEffect(obj.firstChunk.pos);
+                        self.ReleaseGrasp(index);
+                        obj.RemoveFromRoom();
+                        obj.Destroy();
 
                         if (matter > 0)
                             info.Matter += matter;
                         
-                        Logger.LogDebug($"Consumed stomach item (which was a {obj.Format()}) for {matter} matter; matter was {originalMatter}, it's now {info.Matter}");
+                        Logger.LogDebug($"Consumed stomach item (which was a {obj.abstractPhysicalObject.Format()}) for {matter} matter; matter was {originalMatter}, it's now {info.Matter}");
                     }
                     else
                     {
                         self.SubtractFood(1);
                         info.Matter += 20;
+                        self.SpawnFoodToMatterEffect(self.mainBodyChunk.pos);
                         Logger.LogDebug($"Consumed 1 food pip; matter was {originalMatter}, it's now {info.Matter}");
                     }
-                    
-                    var color = PlayerGraphics.SlugcatColor((self.State as PlayerState)!.slugcatCharacter);
-
-                    var vel = new Vector2(Random.value, Random.value) * 2;
-                    self.room.AddObject(new Spark(self.mainBodyChunk.pos, vel, color, null, 30, 50));
-                    
-                    var vel2 = new Vector2(Random.value * 2, Random.value) * 3;
-                    self.room.AddObject(new Spark(self.mainBodyChunk.pos, vel2, color, null, 37, 60));
                 }
             }
             else
             {
-                info.StomachEatTicker = 0;
+                info.ObjectToMatterTicker = 0;
             }
             
             if (self.IsPressed(ConvertMatterToFoodKey) && self.FoodInStomach < self.MaxFoodInStomach && info.Matter >= FoodPipMatterCost)
@@ -169,7 +118,7 @@ public static class PlayerHooks
                 
                 self.Blink(2);
 
-                if (info.MatterToFoodTicker >= 33)
+                if (info.MatterToFoodTicker >= FoodToMatterTicks)
                 {
                     self.Blink(4);
 
@@ -183,16 +132,7 @@ public static class PlayerHooks
 
                     Logger.LogDebug($"Added 1 food pip for {FoodPipMatterCost} matter; matter was {originalMatter}, it's now {info.Matter}");
 
-                    var color = PlayerGraphics.SlugcatColor((self.State as PlayerState)!.slugcatCharacter);
-
-                    var vel = new Vector2(Random.value, Random.value) * 2;
-                    self.room.AddObject(new Spark(self.mainBodyChunk.pos, vel, color, null, 40, 70));
-
-                    //self.room.AddObject(new Lightning(self.room, 2f + Random.value * 3, false));
-                    //self.room.AddObject(new KarmicArmor.EnergyStrand(4 + (int)(Random.value * 10), 0.5f + Random.value * 2)
-                    //{
-                    //    pos = self.mainBodyChunk.pos
-                    //});
+                    self.SpawnFoodToMatterEffect(self.mainBodyChunk.pos);
                 }
             }
             else
@@ -218,7 +158,7 @@ public static class PlayerHooks
                     info.SynthCodeKeyCooldown = 2;
                 }
             }
-            else if (self.objectInStomach == null && info.SynthCode.Length > 0)
+            else if (self.FreeHand() > -1 && info.SynthCode.Length > 0)
             {
                 var stringCode = info.SynthCode;
                 info.SynthCode = "";
@@ -245,7 +185,7 @@ public static class PlayerHooks
                 if (synthCode >= 0 && synthCode < SynthItems.Length)
                 {
                     var world = self.room.world;
-                    var pos = self.room.GetWorldCoordinate(self.mainBodyChunk.pos);
+                    var pos = self.abstractCreature.pos;
                     var id = self.room.game.GetNewID();
                     obj = SynthItems[synthCode](world, pos, id);
                 }
@@ -254,14 +194,33 @@ public static class PlayerHooks
 
                 if (obj != null)
                 {
-                    var cost = Utils.GetMatterValueForObject(obj);
+                    var cost = Utils.GetMatterValueForAbstractObject(obj);
 
                     if (info.Matter >= cost)
                     {
                         var originalMatter = info.Matter;
+
+                        self.room.abstractRoom.AddEntity(obj);
+
+                        try
+                        {
+                            obj.RealizeInRoom();
+                        }
+                        catch (Exception e)
+                        {
+                            Logger.LogError($"Error while realizing synthesized object (info: code? {synthCode}, obj? {obj.Format()}, matter? {info.Matter}): {e.Message}");
+                            return;
+                        }
+                        finally
+                        {
+                            self.room.abstractRoom.RemoveEntity(obj);
+                        }
+
+                        self.SlugcatGrab(obj.realizedObject, self.FreeHand());
+                        
+                        self.SpawnMatterToObjectEffect(obj.realizedObject.firstChunk.pos);
                         
                         info.Matter -= cost;
-                        self.objectInStomach = obj;
                         
                         Logger.LogDebug($"Created a {obj.Format()} for {cost} matter; matter was {originalMatter}, it's now {info.Matter}");
                     }
@@ -276,44 +235,6 @@ public static class PlayerHooks
                 info.SynthCode = "";
             }
         }
-    }
-
-    private static bool CanSwallowThing(Player player, PhysicalObject obj)
-    {
-        if (player.objectInStomach == null)
-        {
-            if (obj is Spear or VultureMask)
-                return true;
-            
-            if (obj is Creature crit && IsSwallowableCreature(player, crit))
-                return true;
-
-            if (player.FoodInStomach == player.MaxFoodInStomach && obj is IPlayerEdible)
-                return true;
-        }
-
-        return false;
-    }
-
-    private static bool AllowItemSwallowing(On.Player.orig_CanBeSwallowed orig, Player self, PhysicalObject obj)
-    {
-        if (self.input[0].pckp)
-        {
-            if (self.IsAlchem())
-                Logger.LogDebug(
-                    $"Alchemist is trying to swallow an object (which is a {obj.abstractPhysicalObject.Format()})");
-
-            if (self.IsAlchem() && CanSwallowThing(self, obj))
-            {
-                Logger.LogDebug("Item can be swallowed");
-                return true;
-            }
-
-            if (self.IsAlchem())
-                Logger.LogDebug("Swallowing failed");
-        }
-
-        return orig(self, obj);
     }
 
     private static void PlayerInit(On.Player.orig_ctor orig, Player self, AbstractCreature abstractCreature, World world)

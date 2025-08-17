@@ -5,7 +5,7 @@ namespace TheAlchemist;
 internal class AlchemistInfo
 {
     internal int Matter;
-    internal int StomachEatTicker = 0;
+    internal int ObjectToMatterTicker = 0;
     internal int MatterToFoodTicker = 0;
     internal int SynthCodeKeyCooldown = 0;
     internal string SynthCode = "";

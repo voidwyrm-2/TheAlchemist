@@ -1,6 +1,7 @@
 using System;
 using ImprovedInput;
 using UnityEngine;
+using Random = UnityEngine.Random;
 
 namespace TheAlchemist;
 
@@ -16,7 +17,64 @@ public static class Utils
     internal static AlchemistInfo GetInfo(this Player self) =>
         Alchemists.GetValue(self, _ => new AlchemistInfo(self));
 
+    internal static int OccupiedHand(this Player self)
+    {
+        for (var i = 0; i < self.grasps.Length; i++)
+        {
+            if (self.grasps[i] != null)
+                return i;
+        }
+
+        return -1;
+    }
+
+    internal static void SpawnObjectToMatterEffect(this Player self, Vector2 pos)
+    {
+        var color = PlayerGraphics.SlugcatColor((self.State as PlayerState)!.slugcatCharacter);
+        
+        self.room.AddObject(new AlchemistPingCircle(self, pos, 0f, 6f, 0f, 65, true, color)
+		{
+			maxThickness = 7f,
+			radDamping = 0.03f,
+			maxAlpha = 0.6f
+		});
+        
+        self.room.PlaySound(SoundID.SS_AI_Give_The_Mark_Boom, self.mainBodyChunk, false, 0.75f, 0.5f + Random.value * 0.5f);
+    }
+    
+    internal static void SpawnMatterToObjectEffect(this Player self, Vector2 pos)
+    {
+        var color = PlayerGraphics.SlugcatColor((self.State as PlayerState)!.slugcatCharacter);
+        
+        self.room.AddObject(new AlchemistPingCircle(self, pos, 0f, 6f, 0f, 65, true, color)
+        {
+            maxThickness = 7f,
+            radDamping = 0.03f,
+            maxAlpha = 0.6f
+        });
+        
+        self.room.PlaySound(SoundID.SS_AI_Give_The_Mark_Boom, self.mainBodyChunk, false, 0.75f, 0.5f + Random.value * 0.5f);
+        self.room.PlaySound(SoundID.Zapper_Zap, self.mainBodyChunk, false, 0.75f, 0.5f + Random.value * 0.2f);
+    }
+    
+    internal static void SpawnFoodToMatterEffect(this Player self, Vector2 pos)
+    {
+        var color = PlayerGraphics.SlugcatColor((self.State as PlayerState)!.slugcatCharacter);
+
+        var vx = 0.1f + Random.value * 0.8f;
+        var vy = 0.5f + Random.value * 0.3f;
+        var lifetime = (int)(1f + Random.value * 1.3f);
+        self.room.AddObject(new Spark(self.mainBodyChunk.pos, new Vector2(vx, vy), color, null, lifetime, lifetime + 4));
+        
+        self.room.PlaySound(SoundID.Snail_Pop, self.mainBodyChunk, false, 0.75f, 1.5f + UnityEngine.Random.value);
+    }
+
     internal static Func<World, WorldCoordinate, EntityID, AbstractPhysicalObject> DefaultSynth(AbstractPhysicalObject.AbstractObjectType type)
+    {
+        return (world, pos, id) => new AbstractPhysicalObject(world, type, null, pos, id);;
+    }
+    
+    internal static Func<World, WorldCoordinate, EntityID, AbstractPhysicalObject> MscSynth(AbstractPhysicalObject.AbstractObjectType type)
     {
         return (world, pos, id) => new AbstractPhysicalObject(world, type, null, pos, id);;
     }
@@ -29,25 +87,23 @@ public static class Utils
     internal static string Format(this AbstractPhysicalObject obj) => obj switch
     {
         AbstractSpear spear => $"(Spear, explosive? {spear.explosive}, electric? {spear.electric})",
-        AbstractCreature crit => $"(Creature, template.type? {crit.creatureTemplate.type}, meatLeft? {crit.state.meatLeft}, dead? {crit.state.dead}), swallowable? {crit.IsSwallowable()}",
+        AbstractCreature crit => $"(Creature, template.type? {crit.creatureTemplate.type}, meatLeft? {crit.state.meatLeft}, dead? {crit.state.dead}), swallowable? {crit.IsConvertable()}",
         _ => $"(Object, type? {obj.type})"
     };
 
-    internal static bool IsSwallowable(this AbstractCreature creature) =>
+    internal static bool IsConvertable(this AbstractCreature creature) =>
         !NotSwallowableCreatures.Contains(creature.creatureTemplate.type);
     
-    internal static int GetMatterValueForObject(AbstractPhysicalObject obj)
+    internal static int GetMatterValueForObject(PhysicalObject obj)
     {
-        obj.Realize();
-        if (obj.realizedObject is IPlayerEdible edible)
-        {
-            var value = edible.FoodPoints;
-            obj.Abstractize(new WorldCoordinate());
-            return value;
-        }
-        
-        obj.Abstractize(new WorldCoordinate());
-        
+        if (obj is IPlayerEdible edible)
+            return edible.FoodPoints;
+
+        return GetMatterValueForAbstractObject(obj.abstractPhysicalObject);
+    }
+    
+    internal static int GetMatterValueForAbstractObject(AbstractPhysicalObject obj)
+    {
         return obj switch
         {
             AbstractSpear spear => GetMatterValueForSpear(spear),
