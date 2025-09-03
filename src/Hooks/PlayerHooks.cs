@@ -1,9 +1,6 @@
 using System;
 using ImprovedInput;
-using Mono.Cecil.Cil;
-using MonoMod.Cil;
 using UnityEngine;
-using Random = UnityEngine.Random;
 
 namespace TheAlchemist;
 
@@ -22,10 +19,8 @@ public static class PlayerHooks
 
     private static void OnPermaDie(On.Player.orig_PermaDie orig, Player self)
     {
-        if (self.IsAlchem())
+        if (self.IsAlchem() && self.TryGetInfo(out var info))
         {
-            var info = self.GetInfo();
-
             info.Matter -= MatterLostOnDeath;
             
             if (info.Matter < 0)
@@ -63,10 +58,8 @@ public static class PlayerHooks
     {
         orig(self, eu);
 
-        if (!self.dead && self.IsAlchem())
+        if (!self.dead && self.IsAlchem() && self.TryGetInfo(out var info))
         {
-            var info = self.GetInfo();
-
             if (self.IsPressed(ConvertToMatterKey) && (self.OccupiedHand() > -1 || self.FoodInStomach > 0))
             {
                 info.ObjectToMatterTicker++;
@@ -85,6 +78,8 @@ public static class PlayerHooks
                     {
                         var index = self.OccupiedHand();
                         var obj = self.grasps[index].grabbed;
+                        
+                        info.Meta.CheckForMetaItem(self, obj);
 
                         var matter = Utils.GetMatterValueForObject(obj);
                         
@@ -208,25 +203,33 @@ public static class PlayerHooks
                         }
                         catch (Exception e)
                         {
-                            Logger.LogError($"Error while realizing synthesized object (info: code? {synthCode}, obj? {obj.Format()}, matter? {info.Matter}): {e.Message}");
+                            try
+                            {
+                                obj.Abstractize(obj.pos);
+                            }
+                            finally
+                            {
+                                self.room.abstractRoom.RemoveEntity(obj);
+                            }
+
+                            Logger.LogError(
+                                $"Error while realizing synthesized object (info: code? {synthCode}, obj? {obj.Format()}, matter? {info.Matter}): {e.Message}");
                             return;
-                        }
-                        finally
-                        {
-                            self.room.abstractRoom.RemoveEntity(obj);
                         }
 
                         self.SlugcatGrab(obj.realizedObject, self.FreeHand());
-                        
+
                         self.SpawnMatterToObjectEffect(obj.realizedObject.firstChunk.pos);
-                        
+
                         info.Matter -= cost;
-                        
-                        Logger.LogDebug($"Created a {obj.Format()} for {cost} matter; matter was {originalMatter}, it's now {info.Matter}");
+
+                        Logger.LogDebug(
+                            $"Created a {obj.Format()} for {cost} matter; matter was {originalMatter}, it's now {info.Matter}");
                     }
                     else
                     {
-                        Logger.LogDebug($"Not enough matter to create {obj.Format()}; need {cost}, but have {info.Matter}");
+                        Logger.LogDebug(
+                            $"Not enough matter to create {obj.Format()}; need {cost}, but have {info.Matter}");
                     }
                 }
             }
@@ -259,13 +262,12 @@ public static class PlayerHooks
             if (self.room.game.IsStorySession)
             {
                 var save = SlugBase.SaveData.SaveDataExtension.GetSlugBaseData(self.room.game.GetStorySession.saveState.miscWorldSaveData);
-                
                 (info, loaded) = AlchemistInfo.LoadFromSave(save, self);
             }
             else
             {
-                loaded = false;
                 info = new AlchemistInfo(self);
+                loaded = false;
             }
 
             Alchemists.Add(self, info);

@@ -13,8 +13,10 @@ namespace TheAlchemist
     [BepInPlugin(MOD_ID, "The Alchemist", MOD_VERSION)]
     public class Plugin : BaseUnityPlugin
     {
+        // ReSharper disable MemberCanBePrivate.Global
         public const string MOD_ID = "nuclear.TheAlchemist";
-        public const string MOD_VERSION = "0.6.4";
+        public const string MOD_VERSION = "0.7.5";
+        // ReSharper restore MemberCanBePrivate.Global
         
         internal new static ManualLogSource Logger;
         
@@ -42,12 +44,13 @@ namespace TheAlchemist
             
             Logger.LogInfo("Keybinds registered");
             
-            On.HUD.HUD.ctor += HUDInit;
+            On.HUD.HUD.ctor += InitAlchemistHUD;
             
+            OracleHooks.Apply();
             PlayerHooks.Apply();
         }
 
-        private static void HUDInit(On.HUD.HUD.orig_ctor orig, HUD.HUD self, FContainer[] fcontainers, RainWorld rainworld, IOwnAHUD owner)
+        private static void InitAlchemistHUD(On.HUD.HUD.orig_ctor orig, HUD.HUD self, FContainer[] fcontainers, RainWorld rainworld, IOwnAHUD owner)
         {
             orig(self, fcontainers, rainworld, owner);
 

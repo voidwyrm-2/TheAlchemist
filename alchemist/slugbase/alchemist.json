@@ -31,14 +31,14 @@
         "the_mark": true,
         "karma": 4,
         "karma_cap": 4,
-        "start_room": "SL_ROOF03",
-        "spawn_pos": [
-            29,
-            49
+        "start_room": "GW_EDGE01",
+        "world_state": [
+            "Alchemist",
+            "Artificer",
+            "Red"
         ],
-        "world_state": "Red",
         "has_dreams": false,
-        "expedition_enabled": false,
-        "expedition_description": "Synthesize your path to victory.<LINE>Make your creator proud."
+        "expedition_enabled": true,
+        "expedition_description": "Convert, consume, and synthesize your path to victory.<LINE>Make your creator proud."
     }
 }

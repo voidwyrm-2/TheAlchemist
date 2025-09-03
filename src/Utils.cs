@@ -14,8 +14,11 @@ public static class Utils
     
     internal static bool IsAlchem(this Player self) => self.SlugCatClass == Alchem;
     
+    internal static bool TryGetInfo(this Player self, out AlchemistInfo info) =>
+        Alchemists.TryGetValue(self, out info);
+    
     internal static AlchemistInfo GetInfo(this Player self) =>
-        Alchemists.GetValue(self, _ => new AlchemistInfo(self));
+        Alchemists.TryGetValue(self, out var info) ? info : null;
 
     internal static int OccupiedHand(this Player self)
     {
@@ -64,9 +67,9 @@ public static class Utils
         var vx = 0.1f + Random.value * 0.8f;
         var vy = 0.5f + Random.value * 0.3f;
         var lifetime = (int)(1f + Random.value * 1.3f);
-        self.room.AddObject(new Spark(self.mainBodyChunk.pos, new Vector2(vx, vy), color, null, lifetime, lifetime + 4));
+        self.room.AddObject(new Spark(pos, new Vector2(vx, vy), color, null, lifetime, lifetime + 4));
         
-        self.room.PlaySound(SoundID.Snail_Pop, self.mainBodyChunk, false, 0.75f, 1.5f + UnityEngine.Random.value);
+        self.room.PlaySound(SoundID.Snail_Pop, self.mainBodyChunk, false, 0.75f, 1.5f + Random.value);
     }
 
     internal static Func<World, WorldCoordinate, EntityID, AbstractPhysicalObject> DefaultSynth(AbstractPhysicalObject.AbstractObjectType type)

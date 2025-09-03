@@ -4,6 +4,8 @@ namespace TheAlchemist;
 
 internal class AlchemistInfo
 {
+    internal AlchemistMeta Meta = new();
+    
     internal int Matter;
     internal int ObjectToMatterTicker = 0;
     internal int MatterToFoodTicker = 0;
@@ -23,6 +25,10 @@ internal class AlchemistInfo
     internal static (AlchemistInfo Info, bool Loaded) LoadFromSave(SlugBaseSaveData save, Player owner)
     {
         AlchemistInfo info = new(owner);
+        
+        if (save == null)
+            return (info, false);
+        
         var loaded = false;
 
         if (save.TryGet(GetMatterSaveKey(owner.playerState.playerNumber), out int matter))
@@ -30,8 +36,12 @@ internal class AlchemistInfo
             info.Matter = matter;
             loaded = true;
         }
+        
+        var (meta, loadedMeta) = AlchemistMeta.LoadFromSave(save, info.PlayerNumber);
 
-        return (info, loaded);
+        info.Meta = meta;
+
+        return (info, loaded || loadedMeta);
     }
 
     private static string GetMatterSaveKey(int playerNumber) =>
