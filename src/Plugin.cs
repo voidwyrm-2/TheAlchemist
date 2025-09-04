@@ -14,8 +14,10 @@ namespace TheAlchemist
     public class Plugin : BaseUnityPlugin
     {
         // ReSharper disable MemberCanBePrivate.Global
+        // ReSharper disable InconsistentNaming
         public const string MOD_ID = "nuclear.TheAlchemist";
-        public const string MOD_VERSION = "0.7.5";
+        public const string MOD_VERSION = "0.8.6";
+        // ReSharper restore InconsistentNaming
         // ReSharper restore MemberCanBePrivate.Global
         
         internal new static ManualLogSource Logger;
@@ -36,6 +38,8 @@ namespace TheAlchemist
                     Utils.RegisterKeybind("convertToFood", "Convert Matter To Food", KeyCode.B, KeyCode.None);
                 SynthesisKey =
                     Utils.RegisterKeybind("synthesis", "Synthesize Object", KeyCode.N, KeyCode.None);
+                NitrousKey =
+                    Utils.RegisterKeybind("nitrous", "Activate nitrous", KeyCode.X, KeyCode.None);
             }
             catch (Exception e)
             {

@@ -1,5 +1,7 @@
 using System;
 using ImprovedInput;
+using RWCustom;
+using Smoke;
 using UnityEngine;
 
 namespace TheAlchemist;
@@ -15,6 +17,60 @@ public static class PlayerHooks
         On.Player.Update += OnUpdate;
         On.ShelterDoor.Close += SavePlayerData;
         On.Player.PermaDie += OnPermaDie;
+        On.Player.MovementUpdate += OnMovementUpdate;
+        On.Player.NewRoom += OnNewRoom;
+    }
+
+    private static void OnNewRoom(On.Player.orig_NewRoom orig, Player self, Room newRoom)
+    {
+        FireSmoke smoke = null;
+        
+        if (self.IsAlchem() && self.TryGetInfo(out var info) && info.NitrousSmoke != null)
+        {
+            smoke = info.NitrousSmoke;
+            info.NitrousSmoke.RemoveFromRoom();
+        }
+        
+        orig(self, newRoom);
+
+        if (smoke != null)
+            newRoom.AddObject(smoke);
+    }
+
+    private static void OnMovementUpdate(On.Player.orig_MovementUpdate orig, Player self, bool eu)
+    {
+        orig(self, eu);
+
+        if (!self.dead && self.IsAlchem() && self.TryGetInfo(out var info))
+        {
+            if (info.NitrousActive && self.input[0].AnyDirectionalInput && self.canJump > 0 &&
+                self.firstChunk.vel != Vector2.zero &&
+                (self.bodyMode == Player.BodyModeIndex.Default || self.bodyMode == Player.BodyModeIndex.Stand))
+            {
+                if (info.NitrousMatterTicker == NitrousMatterTicks)
+                {
+                    info.Matter -= NitrousMatterCost;
+                    info.NitrousMatterTicker = 0;
+                }
+                else
+                {
+                    info.NitrousMatterTicker++;
+                }
+
+                //var a = Custom.RNV();
+                
+                //self.room.AddObject(new Spark(self.bodyChunks[1].pos + a * 5f,
+                //    (a - self.firstChunk.vel).normalized * self.firstChunk.vel.magnitude * 1.3f, Color.white, null, 6,
+                //    12));
+
+                if (self.room.ViewedByAnyCamera(self.mainBodyChunk.pos, 300f))
+                {
+                    var catColor = PlayerGraphics.SlugcatColor((self.State as PlayerState)!.slugcatCharacter);
+                    info.NitrousSmoke?.EmitSmoke(self.mainBodyChunk.pos, Custom.RNV(), catColor, 25);
+                    info.NitrousSmoke?.EmitSmoke(self.mainBodyChunk.pos, Custom.RNV(), catColor, 30);
+                }
+            }
+        }
     }
 
     private static void OnPermaDie(On.Player.orig_PermaDie orig, Player self)
@@ -60,13 +116,13 @@ public static class PlayerHooks
 
         if (!self.dead && self.IsAlchem() && self.TryGetInfo(out var info))
         {
-            if (self.IsPressed(ConvertToMatterKey) && (self.OccupiedHand() > -1 || self.FoodInStomach > 0))
+            if (self.IsPressed(ConvertToMatterKey) && (self.OccupiedHand() > -1 || self.FoodInStomach > 0 || self.Debug()))
             {
                 info.ObjectToMatterTicker++;
                 
                 self.Blink(2);
 
-                if (info.ObjectToMatterTicker >= ObjectToMatterTicks)
+                if (info.ObjectToMatterTicker >= ObjectToMatterTicks || self.Debug())
                 {
                     self.Blink(4);
                     
@@ -74,7 +130,11 @@ public static class PlayerHooks
                     
                     var originalMatter = info.Matter;
 
-                    if (self.OccupiedHand() > -1)
+                    if (self.Debug())
+                    {
+                        info.Matter += 100;
+                    }
+                    else if (self.OccupiedHand() > -1)
                     {
                         var index = self.OccupiedHand();
                         var obj = self.grasps[index].grabbed;
@@ -236,6 +296,31 @@ public static class PlayerHooks
             else
             {
                 info.SynthCode = "";
+            }
+
+            if (self.IsPressed(NitrousKey) && info.Matter >= NitrousMatterCost)
+            {
+                if (!info.NitrousActive)
+                {
+                    info.State.Save(self);
+                    info.NitrousActive = true;
+                    
+                    const float groundIncreaseFac = 2.5f;
+                    const float poleIncreaseFac = 2.7f;
+
+                    self.slugcatStats.runspeedFac *= groundIncreaseFac;
+                    self.slugcatStats.poleClimbSpeedFac *= poleIncreaseFac;
+                    self.slugcatStats.corridorClimbSpeedFac *= poleIncreaseFac;
+                    self.slugcatStats.loudnessFac *= groundIncreaseFac;
+
+                    if (info.NitrousSmoke == null)
+                        info.NitrousSmoke = new FireSmoke(self.room);
+                }
+            }
+            else if (info.NitrousActive)
+            {
+                info.State.Load(self);
+                info.NitrousActive = false;
             }
         }
     }

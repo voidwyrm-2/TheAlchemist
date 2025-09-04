@@ -1,16 +1,23 @@
 using SlugBase.SaveData;
+using Smoke;
 
 namespace TheAlchemist;
 
 internal class AlchemistInfo
 {
     internal AlchemistMeta Meta = new();
+    internal readonly AlchemistState State = new();
     
     internal int Matter;
     internal int ObjectToMatterTicker = 0;
     internal int MatterToFoodTicker = 0;
     internal int SynthCodeKeyCooldown = 0;
     internal string SynthCode = "";
+
+    internal int NitrousMatterTicker = 0;
+    internal bool NitrousActive = false;
+
+    internal FireSmoke NitrousSmoke;
     
     internal bool Saved { get; private set; }
     internal readonly int PlayerNumber;

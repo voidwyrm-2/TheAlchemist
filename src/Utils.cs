@@ -1,5 +1,6 @@
 using System;
 using ImprovedInput;
+using RWCustom;
 using UnityEngine;
 using Random = UnityEngine.Random;
 
@@ -13,6 +14,8 @@ public static class Utils
         PlayerKeybind.Register("nuclear.Alchemist:" + id, "The Alchemist", name, kbp, gpp);
     
     internal static bool IsAlchem(this Player self) => self.SlugCatClass == Alchem;
+
+    internal static bool Debug(this Player player) => player.room.game.devToolsActive;
     
     internal static bool TryGetInfo(this Player self, out AlchemistInfo info) =>
         Alchemists.TryGetValue(self, out info);
@@ -86,6 +89,11 @@ public static class Utils
     {
         return (world, pos, id) => new AbstractSpear(world, null, pos, id, explosive, electric);
     }
+    
+    internal static Func<World, WorldCoordinate, EntityID, AbstractPhysicalObject> DefaultSpearSynth(float hue)
+    {
+        return (world, pos, id) => new AbstractSpear(world, null, pos, id, false, hue);
+    }
 
     internal static string Format(this AbstractPhysicalObject obj) => obj switch
     {
@@ -122,6 +130,9 @@ public static class Utils
 
         if (spear.electric)
             return 60;
+
+        if (ModManager.MSC && spear.hue != 0f)
+            return 80;
             
         return 20;
     }
