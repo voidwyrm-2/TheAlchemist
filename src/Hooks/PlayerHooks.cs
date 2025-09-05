@@ -19,22 +19,28 @@ public static class PlayerHooks
         On.Player.PermaDie += OnPermaDie;
         On.Player.MovementUpdate += OnMovementUpdate;
         On.Player.NewRoom += OnNewRoom;
+        On.Player.Jump += OnJump;
+    }
+
+    private static void OnJump(On.Player.orig_Jump orig, Player self)
+    {
+        orig(self);
+
+        if (self.IsAlchem() && self.TryGetInfo(out var info) && info.NitrousActive && self.jumpBoost != 0)
+            self.jumpBoost *= 1.75f;
     }
 
     private static void OnNewRoom(On.Player.orig_NewRoom orig, Player self, Room newRoom)
     {
-        FireSmoke smoke = null;
-        
-        if (self.IsAlchem() && self.TryGetInfo(out var info) && info.NitrousSmoke != null)
         {
-            smoke = info.NitrousSmoke;
-            info.NitrousSmoke.RemoveFromRoom();
+            if (self.IsAlchem() && self.TryGetInfo(out var info) && info.NitrousSmoke != null)
+            {
+                info.NitrousSmoke.RemoveFromRoom();
+                info.NitrousSmoke = null;
+            }
         }
-        
-        orig(self, newRoom);
 
-        if (smoke != null)
-            newRoom.AddObject(smoke);
+        orig(self, newRoom);
     }
 
     private static void OnMovementUpdate(On.Player.orig_MovementUpdate orig, Player self, bool eu)
@@ -312,15 +318,21 @@ public static class PlayerHooks
                     self.slugcatStats.poleClimbSpeedFac *= poleIncreaseFac;
                     self.slugcatStats.corridorClimbSpeedFac *= poleIncreaseFac;
                     self.slugcatStats.loudnessFac *= groundIncreaseFac;
-
-                    if (info.NitrousSmoke == null)
-                        info.NitrousSmoke = new FireSmoke(self.room);
                 }
+                
+                if (info.NitrousSmoke == null && info.NitrousActive)
+                    info.NitrousSmoke = new FireSmoke(self.room);
             }
             else if (info.NitrousActive)
             {
                 info.State.Load(self);
                 info.NitrousActive = false;
+                
+                if (info.NitrousSmoke != null)
+                {
+                    info.NitrousSmoke.RemoveFromRoom();
+                    info.NitrousSmoke = null;
+                }
             }
         }
     }
