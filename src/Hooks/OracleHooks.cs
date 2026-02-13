@@ -7,10 +7,12 @@ namespace TheAlchemist;
 
 internal static class OracleHooks
 {
+    private const string PebblesEncounteredCountKey = "Nuclear-Alchemist-pebblesEncounteredCount";
+
     internal static void Apply()
     {
         On.SSOracleBehavior.PebblesConversation.AddEvents += PebblesConversationOnAddEvents;
-        IL.SSOracleBehavior.Update += SSOracleBehaviorOnUpdate;
+        //IL.SSOracleBehavior.Update += SSOracleBehaviorOnUpdate;
         IL.SSOracleBehavior.SeePlayer += SSOracleBehaviorILSeePlayer;
     }
 
@@ -21,10 +23,10 @@ internal static class OracleHooks
             orig(self);
             return;
         }
-        
+
         var save = SlugBase.SaveData.SaveDataExtension.GetSlugBaseData(self.owner.oracle.room.game.GetStorySession.saveState.miscWorldSaveData);
 
-        if (!save.TryGet("Nuclear-Alchemist-pebblesEncounteredCount",  out int pebblesEncounteredCount))
+        if (!save.TryGet(PebblesEncounteredCountKey,  out int pebblesEncounteredCount))
             pebblesEncounteredCount = 0;
 
         #region Helpers
@@ -50,7 +52,7 @@ internal static class OracleHooks
             {
                 Wait(210);
             }
-            
+
             Say(
                 "Little courier, on the floor of my chamber, my overseers notified me of your presence when you entered my grounds.");
 
@@ -77,7 +79,7 @@ internal static class OracleHooks
 
             Say(sendoff);
         }
-        
+
         //if (ModManager.MSC && self.owner.CheckStrayCreatureInRoom() != CreatureTemplate.Type.StandardGroundCreature)
         //{
         //    Say("Best of luck to you, and your companion. There is nothing else I can do.");
@@ -85,10 +87,11 @@ internal static class OracleHooks
         //    self.owner.CreatureJokeDialog();
         //    return;
         //}
-        
-        save.Set("Nuclear-Alchemist-pebblesEncounteredCount", pebblesEncounteredCount);
+
+        save.Set(PebblesEncounteredCountKey, pebblesEncounteredCount);
     }
 
+    /*
     private static void SSOracleBehaviorOnUpdate(ILContext il)
     {
         try
@@ -97,7 +100,7 @@ internal static class OracleHooks
             ILLabel label = null;
             c.GotoNext(MoveType.After,
                 i => i.MatchCallOrCallvirt<RainWorldGame>("get_StoryCharacter"),
-                i => i.MatchLdsfld<MoreSlugcats.MoreSlugcatsEnums.SlugcatStatsName>("Artificer"),
+                i => i.MatchLdsfld<MoreSlugcats.MoreSlugcatsEnums.SlugcatStatsName>(Vars.Alchem.value),
                 i => i.MatchCallOrCallvirt(out _),
                 i => i.MatchBrfalse(out label)
             );
@@ -122,6 +125,7 @@ internal static class OracleHooks
             Plugin.Logger.LogError(ex);
         }
     }
+    */
 
     private static void SSOracleBehaviorILSeePlayer(ILContext il)
     {

@@ -80,9 +80,9 @@ public static class Utils
         return (world, pos, id) => new AbstractPhysicalObject(world, type, null, pos, id);;
     }
     
-    internal static Func<World, WorldCoordinate, EntityID, AbstractPhysicalObject> MscSynth(AbstractPhysicalObject.AbstractObjectType type)
+    internal static Func<World, WorldCoordinate, EntityID, AbstractPhysicalObject> ConsumableSynth(AbstractPhysicalObject.AbstractObjectType type)
     {
-        return (world, pos, id) => new AbstractPhysicalObject(world, type, null, pos, id);;
+        return (world, pos, id) => new AbstractConsumable(world, type, null, pos, id, -1, -1, null);
     }
     
     internal static Func<World, WorldCoordinate, EntityID, AbstractPhysicalObject> DefaultSpearSynth(bool explosive, bool electric)
@@ -145,23 +145,26 @@ public static class Utils
         if (type == AbstractPhysicalObject.AbstractObjectType.Rock)
             return 4;
         
+        if (type == AbstractPhysicalObject.AbstractObjectType.Lantern)
+            return 15;
+        
+        if (type == AbstractPhysicalObject.AbstractObjectType.FlareBomb)
+            return 20;
+        
+        if (type == AbstractPhysicalObject.AbstractObjectType.FlyLure)
+            return 20;
+        
         if (type == AbstractPhysicalObject.AbstractObjectType.ScavengerBomb)
             return 30;
         
-        if (type == AbstractPhysicalObject.AbstractObjectType.FlyLure)
-            return 10;
-        
-        if (type == AbstractPhysicalObject.AbstractObjectType.Lantern)
-            return 15;
-                
-        if (type == AbstractPhysicalObject.AbstractObjectType.DataPearl)
-            return 40;
-        
         if (type == AbstractPhysicalObject.AbstractObjectType.SSOracleSwarmer)
-            return 40;
+            return 30;        
+        
+        if (type == AbstractPhysicalObject.AbstractObjectType.DataPearl)
+            return 80;
         
         if (type == AbstractPhysicalObject.AbstractObjectType.VultureMask)
-            return 80;
+            return 100;
         
         if (type == DLCSharedEnums.AbstractObjectType.SingularityBomb)
             return 600;

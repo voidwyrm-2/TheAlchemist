@@ -30,16 +30,17 @@ internal static class Vars
     });
 
     internal static readonly Func<World, WorldCoordinate, EntityID, AbstractPhysicalObject>[] SynthItems = {
-        DefaultSynth(AbstractPhysicalObject.AbstractObjectType.Rock),
-        DefaultSynth(AbstractPhysicalObject.AbstractObjectType.ScavengerBomb),
-        DefaultSpearSynth(false, false),
-        DefaultSpearSynth(true, false),
-        DefaultSpearSynth(false, true),
-        DefaultSpearSynth(3f),
-        DefaultSynth(AbstractPhysicalObject.AbstractObjectType.Lantern),
-        //(world, coord, id) =>
-        //    new DataPearl.AbstractDataPearl(world, AbstractPhysicalObject.AbstractObjectType.DataPearl, null, coord, id, 0, 0, null, DataPearl.AbstractDataPearl.DataPearlType.Misc),
-        DefaultSynth(DLCSharedEnums.AbstractObjectType.SingularityBomb)
+        DefaultSynth(AbstractPhysicalObject.AbstractObjectType.Rock), // 0
+        DefaultSynth(AbstractPhysicalObject.AbstractObjectType.ScavengerBomb), // 1
+        DefaultSpearSynth(false, false), // 2
+        DefaultSpearSynth(true, false), // 3
+        DefaultSpearSynth(false, true), // 4
+        DefaultSpearSynth(3f), // 5
+        DefaultSynth(AbstractPhysicalObject.AbstractObjectType.Lantern), // 6
+        ConsumableSynth(AbstractPhysicalObject.AbstractObjectType.FlareBomb), // 7
+        (world, coord, id) => // 8
+            new DataPearl.AbstractDataPearl(world, AbstractPhysicalObject.AbstractObjectType.DataPearl, null, coord, id, -1, -1, null, DataPearl.AbstractDataPearl.DataPearlType.Misc),
+        DefaultSynth(DLCSharedEnums.AbstractObjectType.SingularityBomb) // 9
     };
         
     internal static PlayerKeybind ConvertToMatterKey;

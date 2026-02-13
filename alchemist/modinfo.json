@@ -1,22 +1,20 @@
 ﻿{
-	"id": "nuclear.TheAlchemist",
-	"name": "The Alchemist",
-	"version": "0.8.6",
-	"authors": "Nuclear Pasta",
-	"description": "A Slugcat sent by a mysterious and distant Iterator.",
-	"requirements": [
-		"moreslugcats",
-		"slime-cubed.slugbase",
-		"customslugcatutils",
-		"improved-input-config"
-	],
-	"requirements_names": [
-		"More Slugcats Expansion",
-		"SlugBase",
-		"Custom Slugcat Utils",
-		"Improved Input Config: Extended"
-	],
-	"tags": [
-		"Custom Slugcat"
-	]
+  "id": "nuclear.TheAlchemist",
+  "name": "The Alchemist",
+  "version": "0.9.7",
+  "authors": "Nuclear Pasta",
+  "description": "A Slugcat sent by a mysterious and distant Iterator.",
+  "requirements": [
+    "moreslugcats",
+    "slime-cubed.slugbase",
+    "customslugcatutils",
+    "improved-input-config"
+  ],
+  "requirements_names": [
+    "More Slugcats Expansion",
+    "SlugBase",
+    "Custom Slugcat Utils",
+    "Improved Input Config: Extended"
+  ],
+  "tags": ["Custom Slugcat"]
 }

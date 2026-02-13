@@ -16,7 +16,7 @@ namespace TheAlchemist
         // ReSharper disable MemberCanBePrivate.Global
         // ReSharper disable InconsistentNaming
         public const string MOD_ID = "nuclear.TheAlchemist";
-        public const string MOD_VERSION = "0.8.8";
+        public const string MOD_VERSION = "0.9.7";
         // ReSharper restore InconsistentNaming
         // ReSharper restore MemberCanBePrivate.Global
         
