@@ -9,15 +9,17 @@ internal class AlchemistInfo
     internal readonly AlchemistState State = new();
     
     internal int Matter;
-    internal int ObjectToMatterTicker = 0;
-    internal int MatterToFoodTicker = 0;
+    internal int ObjectMatterTicker = 0;
+    internal int FoodMatterTicker = 0;
     internal int SynthCodeKeyCooldown = 0;
     internal string SynthCode = "";
 
-    internal int NitrousMatterTicker = 0;
-    internal bool NitrousActive = false;
+    internal int HyperspeedMatterTicker = 0;
+    internal bool HyperspeedActive = false;
 
-    internal FireSmoke NitrousSmoke;
+    internal FireSmoke HyperspeedSmoke;
+
+    internal AbstractPhysicalObject.AbstractObjectType LastConsumed;
     
     internal bool Saved { get; private set; }
     internal readonly int PlayerNumber;
@@ -44,6 +46,9 @@ internal class AlchemistInfo
             loaded = true;
         }
         
+        if (save.TryGet(GetMatterSaveKey(owner.playerState.playerNumber), out AbstractPhysicalObject.AbstractObjectType objt))
+            info.LastConsumed = objt;
+        
         var (meta, loadedMeta) = AlchemistMeta.LoadFromSave(save, info.PlayerNumber);
 
         info.Meta = meta;
@@ -53,10 +58,19 @@ internal class AlchemistInfo
 
     private static string GetMatterSaveKey(int playerNumber) =>
         $"p{playerNumber}-matter";
+    
+    private static string GetLastConsumedSaveKey(int playerNumber) =>
+        $"p{playerNumber}-lastConsumed";
 
     internal void Save(SlugBaseSaveData save)
     {
         save.Set(GetMatterSaveKey(PlayerNumber), Matter);
+
+        if (LastConsumed is null)
+            save.Remove(GetLastConsumedSaveKey(PlayerNumber));
+        else
+            save.Set(GetLastConsumedSaveKey(PlayerNumber), LastConsumed);
+        
         Saved = true;
     }
 }

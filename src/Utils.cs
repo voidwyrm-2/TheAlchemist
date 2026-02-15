@@ -10,8 +10,30 @@ using static Vars;
 
 public static class Utils
 {
+    internal static char Unshift(this char ch) => ch switch
+    {
+        '!' => '1',
+        '@' => '2',
+        '#' => '3',
+        '$' => '4',
+        '%' => '5',
+        '^' => '6',
+        '&' => '7',
+        '*' => '8',
+        '(' => '9',
+        ')' => '0',
+        _ => ch
+    };
+    
+    internal static PlayerKeybind RegisterKeybind(string id, string name, string desc, KeyCode kbp, KeyCode gpp)
+    {
+        var pk = PlayerKeybind.Register("nuclear.Alchemist:" + id, "The Alchemist", name, kbp, gpp);
+        pk.Description = desc;
+        return pk;
+    }
+
     internal static PlayerKeybind RegisterKeybind(string id, string name, KeyCode kbp, KeyCode gpp) =>
-        PlayerKeybind.Register("nuclear.Alchemist:" + id, "The Alchemist", name, kbp, gpp);
+        RegisterKeybind(id, name, "", kbp, gpp);
     
     internal static bool IsAlchem(this Player self) => self.SlugCatClass == Alchem;
 

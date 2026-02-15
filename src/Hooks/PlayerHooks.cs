@@ -26,17 +26,17 @@ public static class PlayerHooks
     {
         orig(self);
 
-        if (self.IsAlchem() && self.TryGetInfo(out var info) && info.NitrousActive && self.jumpBoost != 0)
+        if (self.IsAlchem() && self.TryGetInfo(out var info) && info.HyperspeedActive && self.jumpBoost != 0)
             self.jumpBoost *= 1.75f;
     }
 
     private static void OnNewRoom(On.Player.orig_NewRoom orig, Player self, Room newRoom)
     {
         {
-            if (self.IsAlchem() && self.TryGetInfo(out var info) && info.NitrousSmoke != null)
+            if (self.IsAlchem() && self.TryGetInfo(out var info) && info.HyperspeedSmoke != null)
             {
-                info.NitrousSmoke.RemoveFromRoom();
-                info.NitrousSmoke = null;
+                info.HyperspeedSmoke.RemoveFromRoom();
+                info.HyperspeedSmoke = null;
             }
         }
 
@@ -49,18 +49,18 @@ public static class PlayerHooks
 
         if (!self.dead && self.IsAlchem() && self.TryGetInfo(out var info))
         {
-            if (info.NitrousActive && self.input[0].AnyDirectionalInput && self.canJump > 0 &&
+            if (info.HyperspeedActive && self.input[0].AnyDirectionalInput && self.canJump > 0 &&
                 self.firstChunk.vel != Vector2.zero &&
                 (self.bodyMode == Player.BodyModeIndex.Default || self.bodyMode == Player.BodyModeIndex.Stand))
             {
-                if (info.NitrousMatterTicker == NitrousMatterTicks)
+                if (info.HyperspeedMatterTicker == NitrousMatterTicks)
                 {
-                    info.Matter -= NitrousMatterCost;
-                    info.NitrousMatterTicker = 0;
+                    info.Matter -= HyperspeedMatterCost;
+                    info.HyperspeedMatterTicker = 0;
                 }
                 else
                 {
-                    info.NitrousMatterTicker++;
+                    info.HyperspeedMatterTicker++;
                 }
 
                 //var a = Custom.RNV();
@@ -72,8 +72,8 @@ public static class PlayerHooks
                 if (self.room.ViewedByAnyCamera(self.mainBodyChunk.pos, 300f))
                 {
                     var catColor = PlayerGraphics.SlugcatColor((self.State as PlayerState)!.slugcatCharacter);
-                    info.NitrousSmoke?.EmitSmoke(self.mainBodyChunk.pos, Custom.RNV(), catColor, 25);
-                    info.NitrousSmoke?.EmitSmoke(self.mainBodyChunk.pos, Custom.RNV(), catColor, 30);
+                    info.HyperspeedSmoke?.EmitSmoke(self.mainBodyChunk.pos, Custom.RNV(), catColor, 25);
+                    info.HyperspeedSmoke?.EmitSmoke(self.mainBodyChunk.pos, Custom.RNV(), catColor, 30);
                 }
             }
         }
@@ -120,218 +120,320 @@ public static class PlayerHooks
     {
         orig(self, eu);
 
-        if (!self.dead && self.IsAlchem() && self.TryGetInfo(out var info))
+        if (self.IsAlchem() && self.TryGetInfo(out var info))
         {
-            if (self.IsPressed(ConvertToMatterKey) && (self.OccupiedHand() > -1 || self.FoodInStomach > 0 || self.Debug()))
-            {
-                info.ObjectToMatterTicker++;
-                
-                self.Blink(2);
-
-                if (info.ObjectToMatterTicker >= ObjectToMatterTicks || self.Debug())
-                {
-                    self.Blink(4);
-                    
-                    info.ObjectToMatterTicker = 0;
-                    
-                    var originalMatter = info.Matter;
-
-                    if (self.Debug())
-                    {
-                        info.Matter += 100;
-                    }
-                    else if (self.OccupiedHand() > -1)
-                    {
-                        var index = self.OccupiedHand();
-                        var obj = self.grasps[index].grabbed;
-                        
-                        info.Meta.CheckForMetaItem(self, obj);
-
-                        var matter = Utils.GetMatterValueForObject(obj);
-                        
-                        self.SpawnObjectToMatterEffect(obj.firstChunk.pos);
-                        self.ReleaseGrasp(index);
-                        obj.RemoveFromRoom();
-                        obj.Destroy();
-
-                        if (matter > 0)
-                            info.Matter += matter;
-                        
-                        Logger.LogDebug($"Consumed stomach item (which was a {obj.abstractPhysicalObject.Format()}) for {matter} matter; matter was {originalMatter}, it's now {info.Matter}");
-                    }
-                    else
-                    {
-                        self.SubtractFood(1);
-                        info.Matter += 20;
-                        self.SpawnFoodToMatterEffect(self.mainBodyChunk.pos);
-                        Logger.LogDebug($"Consumed 1 food pip; matter was {originalMatter}, it's now {info.Matter}");
-                    }
-                }
-            }
-            else
-            {
-                info.ObjectToMatterTicker = 0;
-            }
-            
-            if (self.IsPressed(ConvertMatterToFoodKey) && self.FoodInStomach < self.MaxFoodInStomach && info.Matter >= FoodPipMatterCost)
-            {
-                info.MatterToFoodTicker++;
-                
-                self.Blink(2);
-
-                if (info.MatterToFoodTicker >= FoodToMatterTicks)
-                {
-                    self.Blink(4);
-
-                    info.MatterToFoodTicker = 0;
-
-                    var originalMatter = info.Matter;
-
-                    info.Matter -= FoodPipMatterCost;
-
-                    self.AddFood(1);
-
-                    Logger.LogDebug($"Added 1 food pip for {FoodPipMatterCost} matter; matter was {originalMatter}, it's now {info.Matter}");
-
-                    self.SpawnFoodToMatterEffect(self.mainBodyChunk.pos);
-                }
-            }
-            else
-            {
-                info.MatterToFoodTicker = 0;
-            }
-
             if (info.SynthCodeKeyCooldown > 0)
                 info.SynthCodeKeyCooldown--;
 
-            if (self.IsPressed(SynthesisKey))
+            if (self.dead)
             {
-                if (info.SynthCodeKeyCooldown == 0)
-                {
-                    var digit = $"{Input.inputString}".Trim().Trim('n');
-
-                    if (digit.Length > 0 && digit[0] >= '0' && digit[0] <= '9')
-                    {
-                        info.SynthCode += digit[0];
-                        Logger.LogDebug($"Digit added: '{digit}', synthCode is now '{info.SynthCode}'");
-                    }
-
-                    info.SynthCodeKeyCooldown = 2;
-                }
-            }
-            else if (self.FreeHand() > -1 && info.SynthCode.Length > 0)
-            {
-                var stringCode = info.SynthCode;
+                info.ObjectMatterTicker = 0;
                 info.SynthCode = "";
+                info.FoodMatterTicker = 0;
+                info.HyperspeedMatterTicker = 0;
                 
-                int synthCode;
-
-                try
+                if (info.HyperspeedSmoke != null)
                 {
-                    synthCode = int.Parse(stringCode);
-                }
-                catch (FormatException e)
-                {
-                    Logger.LogError($"Cannot parse synthesis code: {e.Message}");
-                    return;
-                }
-                catch (OverflowException e)
-                {
-                    Logger.LogError($"Cannot parse synthesis code: {e.Message}");
-                    return;
-                }
-
-                AbstractPhysicalObject obj = null;
-
-                if (synthCode >= 0 && synthCode < SynthItems.Length)
-                {
-                    var world = self.room.world;
-                    var pos = self.abstractCreature.pos;
-                    var id = self.room.game.GetNewID();
-                    obj = SynthItems[synthCode](world, pos, id);
-                }
-
-                Logger.LogDebug($"synthesis code: '{synthCode}', valid? {obj != null}");
-
-                if (obj != null)
-                {
-                    var cost = Utils.GetMatterValueForAbstractObject(obj);
-
-                    if (info.Matter >= cost)
-                    {
-                        var originalMatter = info.Matter;
-
-                        self.room.abstractRoom.AddEntity(obj);
-
-                        try
-                        {
-                            obj.RealizeInRoom();
-                        }
-                        catch (Exception e)
-                        {
-                            try
-                            {
-                                obj.Abstractize(obj.pos);
-                            }
-                            finally
-                            {
-                                self.room.abstractRoom.RemoveEntity(obj);
-                            }
-
-                            Logger.LogError(
-                                $"Error while realizing synthesized object (info: code? {synthCode}, obj? {obj.Format()}, matter? {info.Matter}): {e.Message}");
-                            return;
-                        }
-
-                        self.SlugcatGrab(obj.realizedObject, self.FreeHand());
-
-                        self.SpawnMatterToObjectEffect(obj.realizedObject.firstChunk.pos);
-
-                        info.Matter -= cost;
-
-                        Logger.LogDebug(
-                            $"Created a {obj.Format()} for {cost} matter; matter was {originalMatter}, it's now {info.Matter}");
-                    }
-                    else
-                    {
-                        Logger.LogDebug(
-                            $"Not enough matter to create {obj.Format()}; need {cost}, but have {info.Matter}");
-                    }
+                    info.HyperspeedSmoke.RemoveFromRoom();
+                    info.HyperspeedSmoke = null;
                 }
             }
             else
             {
-                info.SynthCode = "";
-            }
-
-            if (self.IsPressed(NitrousKey) && info.Matter >= NitrousMatterCost)
-            {
-                if (!info.NitrousActive)
+                if (self.IsPressed(ModKey) && info.SynthCodeKeyCooldown == 0)
                 {
-                    info.State.Save(self);
-                    info.NitrousActive = true;
-                    
-                    const float groundIncreaseFac = 2.5f;
-                    const float poleIncreaseFac = 2.7f;
+                    var inputString = Input.inputString.Trim();
 
-                    self.slugcatStats.runspeedFac *= groundIncreaseFac;
-                    self.slugcatStats.poleClimbSpeedFac *= poleIncreaseFac;
-                    self.slugcatStats.corridorClimbSpeedFac *= poleIncreaseFac;
-                    self.slugcatStats.loudnessFac *= groundIncreaseFac;
+                    if (inputString.Length > 0)
+                    {
+                        char? digit = inputString[0].Unshift();
+
+                        //Logger.LogDebug($"inputstring was '{digit}'");
+
+                        if (digit >= '0' && digit <= '9')
+                        {
+                            info.SynthCode += digit;
+                            Logger.LogDebug($"Digit added: '{digit}', synthCode is now '{info.SynthCode}'");
+                        }
+
+                        info.SynthCodeKeyCooldown = 2;
+                    }
                 }
-                
-                if (info.NitrousSmoke == null && info.NitrousActive)
-                    info.NitrousSmoke = new FireSmoke(self.room);
-            }
-            else if (info.NitrousActive)
-            {
-                info.State.Load(self);
-                info.NitrousActive = false;
-                
-                if (info.NitrousSmoke != null)
+                else if (!self.IsPressed(ModKey) && self.FreeHand() > -1 && info.SynthCode.Length > 0)
                 {
-                    info.NitrousSmoke.RemoveFromRoom();
-                    info.NitrousSmoke = null;
+                    var stringCode = info.SynthCode;
+                    info.SynthCode = "";
+
+                    uint synthCode;
+
+                    try
+                    {
+                        synthCode = uint.Parse(stringCode);
+                    }
+                    catch (FormatException e)
+                    {
+                        Logger.LogError($"Cannot parse synthesis code: {e.Message}");
+                        return;
+                    }
+                    catch (OverflowException e)
+                    {
+                        Logger.LogError($"Cannot parse synthesis code: {e.Message}");
+                        return;
+                    }
+
+                    AbstractPhysicalObject obj = null;
+
+                    if (synthCode < SynthItems.Length)
+                    {
+                        var world = self.room.world;
+                        var pos = self.abstractCreature.pos;
+                        var id = self.room.game.GetNewID();
+                        obj = SynthItems[synthCode](world, pos, id);
+                    }
+
+                    Logger.LogDebug($"synthesis code: '{synthCode}', valid? {obj != null}");
+
+                    if (obj != null)
+                    {
+                        var cost = Utils.GetMatterValueForAbstractObject(obj);
+
+                        if (info.Matter >= cost)
+                        {
+                            var originalMatter = info.Matter;
+
+                            self.room.abstractRoom.AddEntity(obj);
+
+                            try
+                            {
+                                obj.RealizeInRoom();
+                            }
+                            catch (Exception e)
+                            {
+                                try
+                                {
+                                    obj.Abstractize(obj.pos);
+                                }
+                                finally
+                                {
+                                    self.room.abstractRoom.RemoveEntity(obj);
+                                }
+
+                                Logger.LogError(
+                                    $"Error while realizing synthesized object (info: code? {synthCode}, obj? {obj.Format()}, matter? {info.Matter}): {e.Message}");
+                                return;
+                            }
+
+                            self.SlugcatGrab(obj.realizedObject, self.FreeHand());
+
+                            self.SpawnMatterToObjectEffect(obj.realizedObject.firstChunk.pos);
+
+                            info.Matter -= cost;
+
+                            Logger.LogDebug(
+                                $"Created a {obj.Format()} for {cost} matter; matter was {originalMatter}, it's now {info.Matter}");
+                        }
+                        else
+                        {
+                            Logger.LogDebug(
+                                $"Not enough matter to create {obj.Format()}; need {cost}, but have {info.Matter}");
+                        }
+                    }
+                }
+
+                if (self.IsPressed(ObjectMatterKey))
+                {
+                    /*
+                    if (self.IsPressed(ModKey) && self.FreeHand() > -1 && info.LastConsumed != null)
+                    {
+                        info.ObjectMatterTicker++;
+
+                        self.Blink(2);
+
+                        var obj = info.LastConsumed;
+
+                        if (info.ObjectMatterTicker >= ObjectToMatterTicks || self.Debug())
+                        {
+                            self.Blink(4);
+
+                            info.ObjectMatterTicker = 0;
+
+                            var cost = Utils.GetMatterValueForAbstractObject(obj);
+
+                            if (info.Matter >= cost)
+                            {
+                                var originalMatter = info.Matter;
+
+                                self.room.abstractRoom.AddEntity(obj);
+
+                                try
+                                {
+                                    obj.RealizeInRoom();
+                                }
+                                catch (Exception e)
+                                {
+                                    try
+                                    {
+                                        obj.Abstractize(obj.pos);
+                                    }
+                                    finally
+                                    {
+                                        self.room.abstractRoom.RemoveEntity(obj);
+                                    }
+
+                                    Logger.LogError(
+                                        $"Error while realizing synthesized object (info: code? {synthCode}, obj? {obj.Format()}, matter? {info.Matter}): {e.Message}");
+                                    return;
+                                }
+
+                                self.SlugcatGrab(obj.realizedObject, self.FreeHand());
+
+                                self.SpawnMatterToObjectEffect(obj.realizedObject.firstChunk.pos);
+
+                                info.Matter -= cost;
+
+                                Logger.LogDebug(
+                                    $"Created a {obj.Format()} for {cost} matter; matter was {originalMatter}, it's now {info.Matter}");
+                            }
+                            else
+                            {
+                                Logger.LogDebug(
+                                    $"Not enough matter to create {obj.Format()}; need {cost}, but have {info.Matter}");
+                            }
+                        }
+                    }
+                    else
+                    */
+                    if (self.OccupiedHand() > -1 || self.Debug())
+                    {
+                        info.ObjectMatterTicker++;
+
+                        self.Blink(2);
+
+                        if (info.ObjectMatterTicker >= ObjectToMatterTicks || self.Debug())
+                        {
+                            self.Blink(4);
+
+                            info.ObjectMatterTicker = 0;
+
+                            var originalMatter = info.Matter;
+
+                            if (self.Debug())
+                            {
+                                info.Matter += 100;
+                            }
+                            else if (self.OccupiedHand() > -1)
+                            {
+                                var index = self.OccupiedHand();
+                                var obj = self.grasps[index].grabbed;
+
+                                info.Meta.CheckForMetaItem(self, obj);
+
+                                var matter = Utils.GetMatterValueForObject(obj);
+                                
+                                if (obj.abstractPhysicalObject is not AbstractCreature && matter > 0)
+                                    info.LastConsumed = obj.abstractPhysicalObject.type;
+
+                                self.SpawnObjectToMatterEffect(obj.firstChunk.pos);
+                                self.ReleaseGrasp(index);
+                                obj.RemoveFromRoom();
+                                obj.Destroy();
+
+                                if (matter > 0)
+                                    info.Matter += matter;
+
+                                Logger.LogDebug(
+                                    $"Consumed stomach item (which was a {obj.abstractPhysicalObject.Format()}) for {matter} matter; matter was {originalMatter}, it's now {info.Matter}");
+                            }
+                        }
+                    }
+                    else
+                    {
+                        info.ObjectMatterTicker = 0;
+                    }
+                }
+
+                if (self.IsPressed(FoodMatterKey))
+                {
+                    if (self.IsPressed(ModKey) && self.FoodInStomach < self.MaxFoodInStomach && info.Matter >= FoodPipMatterCost)
+                    {
+                        info.FoodMatterTicker++;
+
+                        self.Blink(2);
+
+                        if (info.FoodMatterTicker >= FoodMatterTicks)
+                        {
+                            self.Blink(4);
+
+                            info.FoodMatterTicker = 0;
+
+                            var originalMatter = info.Matter;
+
+                            info.Matter -= FoodPipMatterCost;
+
+                            self.AddFood(1);
+
+                            Logger.LogDebug(
+                                $"Added 1 food pip for {FoodPipMatterCost} matter; matter was {originalMatter}, it's now {info.Matter}");
+
+                            self.SpawnFoodToMatterEffect(self.mainBodyChunk.pos);
+                        }
+                    }
+                    else if (self.FoodInStomach > 0)
+                    {
+                        info.FoodMatterTicker++;
+
+                        self.Blink(2);
+
+                        if (info.FoodMatterTicker >= FoodMatterTicks)
+                        {
+                            self.Blink(4);
+
+                            info.FoodMatterTicker = 0;
+
+                            var originalMatter = info.Matter;
+
+                            self.SubtractFood(1);
+                            info.Matter += 20;
+                            self.SpawnFoodToMatterEffect(self.mainBodyChunk.pos);
+                            Logger.LogDebug(
+                                $"Consumed 1 food pip; matter was {originalMatter}, it's now {info.Matter}");
+                        }
+                    }
+                    else
+                    {
+                        info.FoodMatterTicker = 0;
+                    }
+                }
+
+                if (self.IsPressed(HyperspeedKey) && info.Matter >= HyperspeedMatterCost)
+                {
+                    if (!info.HyperspeedActive)
+                    {
+                        info.State.Save(self);
+                        info.HyperspeedActive = true;
+
+                        const float groundIncreaseFac = 2.5f;
+                        const float poleIncreaseFac = 2.7f;
+
+                        self.slugcatStats.runspeedFac *= groundIncreaseFac;
+                        self.slugcatStats.poleClimbSpeedFac *= poleIncreaseFac;
+                        self.slugcatStats.corridorClimbSpeedFac *= poleIncreaseFac;
+                        self.slugcatStats.loudnessFac *= groundIncreaseFac;
+                    }
+
+                    if (info.HyperspeedSmoke == null && info.HyperspeedActive)
+                        info.HyperspeedSmoke = new FireSmoke(self.room);
+                }
+                else if (info.HyperspeedActive)
+                {
+                    info.State.Load(self);
+                    info.HyperspeedActive = false;
+
+                    if (info.HyperspeedSmoke != null)
+                    {
+                        info.HyperspeedSmoke.RemoveFromRoom();
+                        info.HyperspeedSmoke = null;
+                    }
                 }
             }
         }

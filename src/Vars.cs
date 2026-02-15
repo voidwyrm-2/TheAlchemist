@@ -15,11 +15,12 @@ internal static class Vars
     internal static SlugcatStats.Name Alchem = new("nuclear.Alchemist");
 
     internal const int ObjectToMatterTicks = 28;
-    internal const int FoodToMatterTicks = 28;
+    internal const int FoodMatterTicks = 28;
     internal const int NitrousMatterTicks = 3;
     
     internal const int FoodPipMatterCost = 20;
-    internal const int NitrousMatterCost = 1;
+    internal const int KarmaMatterCost = 1000;
+    internal const int HyperspeedMatterCost = 3;
     internal const int MatterLostOnDeath = 80;
 
     internal static readonly HashSet<CreatureTemplate.Type> NotSwallowableCreatures = new(new []
@@ -42,9 +43,10 @@ internal static class Vars
             new DataPearl.AbstractDataPearl(world, AbstractPhysicalObject.AbstractObjectType.DataPearl, null, coord, id, -1, -1, null, DataPearl.AbstractDataPearl.DataPearlType.Misc),
         DefaultSynth(DLCSharedEnums.AbstractObjectType.SingularityBomb) // 9
     };
-        
-    internal static PlayerKeybind ConvertToMatterKey;
-    internal static PlayerKeybind ConvertMatterToFoodKey;
-    internal static PlayerKeybind SynthesisKey;
-    internal static PlayerKeybind NitrousKey;
+
+    internal static PlayerKeybind ModKey;
+    internal static PlayerKeybind ObjectMatterKey;
+    internal static PlayerKeybind FoodMatterKey;
+    internal static PlayerKeybind KarmaMatterKey;
+    internal static PlayerKeybind HyperspeedKey;
 }

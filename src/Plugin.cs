@@ -16,7 +16,7 @@ namespace TheAlchemist
         // ReSharper disable MemberCanBePrivate.Global
         // ReSharper disable InconsistentNaming
         public const string MOD_ID = "nuclear.TheAlchemist";
-        public const string MOD_VERSION = "0.9.7";
+        public const string MOD_VERSION = "0.10.4";
         // ReSharper restore InconsistentNaming
         // ReSharper restore MemberCanBePrivate.Global
         
@@ -32,14 +32,15 @@ namespace TheAlchemist
             
             try
             {
-                ConvertToMatterKey =
-                    Utils.RegisterKeybind("convertToMatter", "Convert To Matter", KeyCode.V, KeyCode.None);
-                ConvertMatterToFoodKey =
-                    Utils.RegisterKeybind("convertToFood", "Convert Matter To Food", KeyCode.B, KeyCode.None);
-                SynthesisKey =
-                    Utils.RegisterKeybind("synthesis", "Synthesize Object", KeyCode.N, KeyCode.None);
-                NitrousKey =
-                    Utils.RegisterKeybind("nitrous", "Activate nitrous", KeyCode.X, KeyCode.None);
+                ModKey = Utils.RegisterKeybind("modify", "Modifier", "If this is held, it modifies some of the other keybinds to do different things; in most cases, it reverses the effect", KeyCode.LeftShift, KeyCode.None);
+                ObjectMatterKey =
+                    Utils.RegisterKeybind("objectMatter", "Convert Object To Matter", KeyCode.Z, KeyCode.None);
+                FoodMatterKey =
+                    Utils.RegisterKeybind("foodMatter", "Convert Food To Matter", KeyCode.X, KeyCode.None);
+                KarmaMatterKey =
+                    Utils.RegisterKeybind("karmaMatter", "Convert Karma To Matter", KeyCode.C, KeyCode.None);
+                HyperspeedKey =
+                    Utils.RegisterKeybind("hyperspeed", "Activate Hyperspeed", KeyCode.V, KeyCode.None);
             }
             catch (Exception e)
             {
